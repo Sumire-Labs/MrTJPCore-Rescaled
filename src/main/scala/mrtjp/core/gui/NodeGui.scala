@@ -88,6 +88,28 @@ class NodeGui(c:Container, w:Int, h:Int) extends GuiContainer(c) with TNode
     var size = Size.zeroSize //todo initialize this to xSize x ySize
     override def frame = new Rect(position, size)
 
+    /** Visible screen-space areas outside the main window, respecting ancestor clip nodes. */
+    def getExtraGuiAreas:java.util.List[java.awt.Rectangle] =
+        val areas = new java.util.ArrayList[java.awt.Rectangle]()
+        val body = frame
+        def clipped(area:Rect, clip:Option[Rect]):Rect = clip match
+            case None => area
+            case Some(bounds) =>
+                val x = math.max(area.x, bounds.x)
+                val y = math.max(area.y, bounds.y)
+                new Rect(x, y, math.max(0, math.min(area.maxX, bounds.maxX)-x),
+                    math.max(0, math.min(area.maxY, bounds.maxY)-y))
+        def gather(node:TNode, offset:Point, clip:Option[Rect]):Unit =
+            if !node.hidden then
+                val local = node.frame
+                val area = clipped(Rect(offset+local.origin, local.size), clip)
+                if area.width > 0 && area.height > 0 && !body.contains(area) then
+                    areas.add(new java.awt.Rectangle(area.x, area.y, area.width, area.height))
+                val childClip = if node.isInstanceOf[ClipNode] then Some(area) else clip
+                node.children.foreach(child => gather(child, offset+node.position, childClip))
+        children.foreach(child => gather(child, position, None))
+        areas
+
     final override def initGui(): Unit =
         if size == Size.zeroSize then size = Size(xSize, ySize) //TODO Legacy (size should be set directly)
         else

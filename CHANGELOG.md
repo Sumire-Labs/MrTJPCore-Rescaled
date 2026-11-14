@@ -9,6 +9,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- An optional JEI-compatible GUI handler for visible node areas outside the main window, including clipped and hidden-node handling ([ProjectRed #1739](https://github.com/MrTJP/ProjectRed/issues/1739)).
+
 - GitHub Actions checks for builds, regression tests and dedicated-server startup.
 - Tag-based publishing to Maven, CurseForge and Modrinth, with a separate Maven retry workflow.
 - Regression checks for Enum collections, inventory operations, key state cleanup, tile packets and textbox input.

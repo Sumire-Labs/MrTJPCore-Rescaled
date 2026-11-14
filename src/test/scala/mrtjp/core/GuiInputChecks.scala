@@ -117,6 +117,49 @@ object GuiInputChecks {
             screen.mouseReleased(x, y, 0)
             assert(screen.containerClicks > 0, "Unconsumed input must still reach the container")
             assert(inventory.getStackInSlot(0).getCount == 10)
+            class ExtraBox extends TNode {
+                override def frame = Rect(position, Size(20, 20))
+            }
+            val extra = new ExtraBox
+            extra.position = Point(120, 40)
+            screen.addChild(extra)
+            val clip = new mrtjp.core.gui.ClipNode
+            clip.position = Point(90, 0)
+            clip.size = Size(20, 20)
+            val clippedChild = new ExtraBox
+            clippedChild.position = Point(15, 0)
+            clip.addChild(clippedChild)
+            screen.addChild(clip)
+            val origin = screen.position
+            assert(screen.getExtraGuiAreas.contains(new java.awt.Rectangle(origin.x+120, origin.y+40, 20, 20)))
+            assert(screen.getExtraGuiAreas.contains(new java.awt.Rectangle(origin.x+105, origin.y, 5, 20)))
+            assert(!screen.getExtraGuiAreas.contains(new java.awt.Rectangle(origin.x+105, origin.y, 20, 20)))
+            extra.hidden = true
+            assert(!screen.getExtraGuiAreas.contains(new java.awt.Rectangle(origin.x+120, origin.y+40, 20, 20)))
+            extra.hidden = false
+            if (java.lang.Boolean.getBoolean("mrtjpcore.jei.smoke")) {
+                assert(net.minecraftforge.fml.common.Loader.isModLoaded("jei"))
+                val runtime = Class.forName("mezz.jei.Internal").getMethod("getRuntime").invoke(null)
+                val overlay = runtime.getClass.getMethod("getIngredientListOverlay").invoke(runtime)
+                val field = overlay.getClass.getDeclaredFields.find(_.getType.getName == "mezz.jei.gui.GuiScreenHelper").get
+                field.setAccessible(true)
+                val helper = field.get(overlay)
+                val update = helper.getClass.getMethod("updateGuiExclusionAreas")
+                val contains = helper.getClass.getMethod("isInGuiExclusionArea", classOf[Int], classOf[Int])
+                val previousScreen = mc.currentScreen
+                try {
+                    mc.currentScreen = screen
+                    update.invoke(helper)
+                    assert(contains.invoke(helper, Int.box(origin.x+130), Int.box(origin.y+50)).asInstanceOf[Boolean],
+                        "JEI must recognize the external node as part of the GUI")
+                    extra.hidden = true
+                    update.invoke(helper)
+                    assert(!contains.invoke(helper, Int.box(origin.x+130), Int.box(origin.y+50)).asInstanceOf[Boolean])
+                } finally {
+                    mc.currentScreen = previousScreen
+                    update.invoke(helper)
+                }
+            }
         } finally { mc.playerController = previousController }
     }
 }

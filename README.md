@@ -74,6 +74,18 @@ hook and validate permissions and payloads there. Description key 0 is never a c
 This port does not include GTNH's 1.7.10 rendering patches or ProjectRed 1.21.1 features.
 Those changes need matching 1.12.2 implementations and consumer integration tests.
 
+## JEI-compatible overlays
+
+When JEI or HEI is installed, NodeGui reports visible child areas outside its main
+window so the ingredient overlay and cheat-mode cursor handling stay out of those
+areas. Hidden nodes and content outside ClipNode masks are excluded. This addresses
+the extra-area handling reported in [ProjectRed #1739](https://github.com/MrTJP/ProjectRed/issues/1739).
+
+The integration is optional and is tested with HEI 4.35. A screen that draws controls
+outside the node tree can override `NodeGui.getExtraGuiAreas`.
+Run `./gradlew runClient -Pclient_smoke=true -Pjei_smoke=true --no-configuration-cache`
+to check the integration with the pinned JEI-compatible implementation.
+
 ## Publishing
 
 GitHub Actions builds every push/PR. Pushing a version tag such as `2.2.0` or

@@ -54,6 +54,7 @@ if (providers.gradleProperty("client_smoke").orElse("false").get().toBoolean()) 
         classpath(sourceSets.getByName("test").output)
         workingDir(directory)
         systemProperty("mrtjpcore.client.result", result.absolutePath)
+        systemProperty("mrtjpcore.jei.smoke", providers.gradleProperty("jei_smoke").orElse("false").get())
         doFirst { directory.mkdirs(); result.parentFile.mkdirs(); result.delete() }
         doLast { check(result.isFile && result.readText().trim() == "PASS") { "Client regression checks did not finish" } }
     }
