@@ -1,0 +1,162 @@
+/*
+ * Copyright (c) 2014.
+ * Created by MrTJP.
+ * All rights reserved.
+ */
+package mrtjp.core.item
+
+import net.minecraft.item.{Item, ItemStack}
+import net.minecraft.nbt.NBTTagCompound
+
+import scala.collection.immutable.HashMap
+import scala.IterableOnce
+import scala.language.implicitConversions
+
+object ItemKey
+:
+    def get(stack:ItemStack):ItemKey = new ItemKey(stack.getItem, stack.getItemDamage, stack.getTagCompound)
+
+    @deprecated("Use nonnull standard")
+    def getOrNull(stack:ItemStack):ItemKey =
+        if stack.isEmpty then null
+        else get(stack)
+
+class ItemKey(val item:Item, val itemDamage:Int, val tag:NBTTagCompound) extends Ordered[ItemKey]
+:
+    lazy val testStack: ItemStack = makeStack(1)
+    lazy val itemID: Int = Item.getIdFromItem(item)
+
+    private val hash = itemID*1000001*itemDamage+(if tag != null then tag.hashCode else 0)
+
+    override def hashCode: Int = hash
+
+    override def equals(other: Any): Boolean = other match
+        case that: ItemKey =>
+            item == that.item && itemDamage == that.itemDamage &&
+              tag == that.tag
+        case _ => false
+
+    override def toString: String = getName
+
+    def compare(that: ItemKey): Int =
+        val c = itemID - that.itemID
+        if c == 0 then itemDamage - that.itemDamage
+        else c
+
+    def makeStack(size:Int):ItemStack =
+        val stack = new ItemStack(item, size, itemDamage)
+        if tag != null then stack.setTagCompound(tag.copy())
+        stack
+
+    def copy = new ItemKey(item, itemDamage, tag)
+
+    def isEmpty: Boolean = testStack.isEmpty
+
+    /** Interactions * */
+    def getItem: Item = item
+
+    def getMaxStackSize: Int = testStack.getMaxStackSize
+
+    def getName: String = testStack.getDisplayName
+
+object ItemKeyStack
+:
+    def get(key:ItemKey, size:Int) = new ItemKeyStack(key, size)
+
+    def get(stack:ItemStack):ItemKeyStack = new ItemKeyStack(ItemKey.get(stack), stack.getCount)
+
+    @deprecated("Use nonnull standard")
+    def getOrNull(stack:ItemStack):ItemKeyStack =
+        if stack.isEmpty then null
+        else get(stack)
+
+class ItemKeyStack(val key:ItemKey, var stackSize:Int) extends Ordered[ItemKeyStack]
+:
+    override def hashCode: Int = key.hashCode
+
+    override def equals(other: Any): Boolean = other match
+        case that: ItemKeyStack =>
+            key == that.key && stackSize == that.stackSize
+        case _ => false
+
+    override def toString: String = "[" + key.toString + ", " + stackSize + "]"
+
+    def makeStack: ItemStack = key.makeStack(stackSize)
+
+    def copy = new ItemKeyStack(key.copy, stackSize)
+
+    def isEmpty: Boolean = key.isEmpty || stackSize <= 0
+
+    def compare(that: ItemKeyStack): Int =
+        val c = key.compare(that.key)
+        if c == 0 then stackSize - that.stackSize
+        else c
+
+class ItemQueue
+:
+    private var collection = HashMap[ItemKey, Int]()
+
+    def +=(elem: (ItemKey, Int)): ItemQueue =
+        val current = collection.getOrElse(elem._1, 0)
+        collection += elem._1 -> (current + elem._2)
+        this
+
+    def ++=(xs:IterableOnce[(ItemKey, Int)]): ItemQueue = {xs.iterator.foreach(+=); this}
+
+    def ++=(that:ItemQueue): ItemQueue = {that.result.iterator.foreach(+=); this}
+
+    def add(item:ItemKey, amount:Int): Unit =
+        this += item -> amount
+
+    def -=(elem:(ItemKey, Int)) =
+        val remaining = apply(elem._1)-elem._2
+        if remaining > 0 then collection += elem._1 -> remaining
+        else collection -= elem._1
+
+    def --=(xs: IterableOnce[(ItemKey, Int)]): ItemQueue = {
+        xs.iterator.foreach(-=); this
+    }
+
+    def --=(that: ItemQueue): ItemQueue = {
+        that.result.iterator.foreach(-=); this
+    }
+
+    def remove(item:ItemKey, amount:Int): Unit =
+        this -= item -> amount
+
+    def apply(item:ItemKey):Int = collection.getOrElse(item, 0)
+
+    def clear(): Unit ={collection = HashMap[ItemKey, Int]()}
+
+    def isEmpty: Boolean = collection.isEmpty
+
+    def nonEmpty: Boolean = collection.nonEmpty
+
+    def keySet: Set[ItemKey] = collection.keySet
+
+    def count(p: ItemKey => Boolean): Int =
+        collection.foldLeft(0) { (i, pair) =>
+            if p(pair._1) then i + pair._2 else i
+        }
+
+    def countItems(p: ItemKey => Boolean): Int =
+        collection.count(pair => p(pair._1))
+
+    def result: Map[ItemKey, Int] =
+        val b = HashMap.newBuilder[ItemKey, Int]
+        b ++= collection
+        b.result()
+
+object ItemKeyConversions
+:
+    implicit def itemToIK(item:Item):ItemKey = ItemKey.get(new ItemStack(item))
+    implicit def IKToItem(i:ItemKey):Item = i.getItem
+
+    implicit def stackToIK(stack:ItemStack):ItemKey = ItemKey.get(stack)
+    implicit def IKToStack(key:ItemKey):ItemStack = key.makeStack(0)
+
+    implicit def stackToIKS(stack:ItemStack):ItemKeyStack = ItemKeyStack.get(stack)
+    implicit def IKSToStack(key:ItemKeyStack):ItemStack = key.makeStack
+
+    implicit def KToKS(key:ItemKey):ItemKeyStack = ItemKeyStack.get(key, 0)
+    implicit def KSToK(key:ItemKeyStack):ItemKey = key.key

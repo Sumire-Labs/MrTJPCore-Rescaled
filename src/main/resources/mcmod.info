@@ -1,0 +1,18 @@
+[
+  {
+    "modid": @{MOD_ID_JSON},
+    "name": @{MOD_NAME_JSON},
+    "version": @{MOD_VERSION_JSON},
+    "mcversion": "1.12.2",
+    "requiredMods": ["cleanroom@[@{CLEANROOM_VERSION},)", "scalar@[@{SCALA_VERSION},)", "codechickenlib@[@{CCL_VERSION},)"],
+    "description": @{MOD_DESCRIPTION_JSON},
+    "authorList": @{MOD_AUTHORS_JSON},
+    "credits": @{MOD_CREDITS_JSON},
+    "url": @{MOD_URL_JSON},
+    "updateJSON": @{MOD_UPDATE_JSON_JSON},
+    "logoFile": @{MOD_LOGO_JSON},
+    "modProperties": {
+      "issueTrackerUrl": @{MOD_ISSUE_TRACKER_JSON}
+    }
+  }
+]

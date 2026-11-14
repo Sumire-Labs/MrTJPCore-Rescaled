@@ -1,0 +1,245 @@
+/*
+ * Copyright (c) 2014.
+ * Created by MrTJP.
+ * All rights reserved.
+ */
+package mrtjp.core.gui
+
+import java.util.List as JList
+
+import mrtjp.core.inventory.InvWrapper
+import net.minecraft.client.Minecraft
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.inventory.*
+import net.minecraft.item.ItemStack
+import net.minecraftforge.fml.relauncher.{Side, SideOnly}
+
+import scala.collection.mutable.Buffer as MBuffer
+import scala.jdk.CollectionConverters.*
+
+class NodeContainer extends Container
+:
+    var startWatchDelegate: EntityPlayer => Unit = { (p: EntityPlayer) => }
+    var stopWatchDelegate: EntityPlayer => Unit = { (p: EntityPlayer) => }
+    var slotChangeDelegate: Int => Unit = { (slot: Int) => }
+
+    def slots:MBuffer[TSlot3] = inventorySlots.asInstanceOf[JList[TSlot3]].asScala
+
+    override def canInteractWith(player:EntityPlayer) = true
+
+    override def canDragIntoSlot(slot: Slot): Boolean = slot match
+        case s: TSlot3 => !s.phantomSlot
+        case _ => super.canDragIntoSlot(slot)
+
+    override def addSlotToContainer(slot: Slot): Slot =
+        if !slot.isInstanceOf[TSlot3] then
+            throw new IllegalArgumentException("NodeContainers can only except slots of type Slot3")
+        super.addSlotToContainer(slot)
+
+        slot.asInstanceOf[TSlot3].slotChangeDelegate2 = { () => slotChangeDelegate(slot.slotNumber) }
+        slot
+
+    @SideOnly(Side.CLIENT)
+    def addPlayerInv(x:Int, y:Int): Unit ={addPlayerInv(Minecraft.getMinecraft.player, x, y)}
+    def addPlayerInv(player:EntityPlayer, x:Int, y:Int): Unit =
+        var next = 0
+        def up() = {next+=1;next-1}
+
+        for (x, y) <- GuiLib.createSlotGrid(x, y+58, 9, 1, 0, 0) do
+            addSlotToContainer(new Slot3(player.inventory, up(), x, y)) //hotbar
+
+        for (x, y) <- GuiLib.createSlotGrid(x, y, 9, 3, 0, 0) do
+            addSlotToContainer(new Slot3(player.inventory, up(), x, y)) //slots
+
+    override def addListener(listener:IContainerListener): Unit =
+        super.addListener(listener)
+        listener match
+            case p:EntityPlayer if !p.world.isRemote =>
+                startWatchDelegate(p)
+            case _ =>
+
+
+    override def removeListener(listener:IContainerListener): Unit =
+        super.removeListener(listener)
+        listener match
+            case p:EntityPlayer if !p.world.isRemote =>
+                stopWatchDelegate(p)
+            case _ =>
+
+    override def onContainerClosed(p:EntityPlayer): Unit =
+        super.onContainerClosed(p)
+        if !p.world.isRemote then
+            stopWatchDelegate(p)
+
+    /**
+      * Called when a slot in this container is clicked, or any other event that occurs
+      * that results in a item stack moving such as hotbar swapping w/ numbers 0-8.
+      * @param id The slot ID
+      * @param dragType Changes meaning depending on clickType:
+      *                 PICKUP: The mouse button 0 = left click, 1 = right click
+      *                 QUICK_MOVE: The mouse button
+      *                 SWAP: The keyboard key that was pressed 0 to 8
+      *                 QUICK_CRAFT: Some type of mask. Look at super method.
+      *                 PICKUP_ALL: The mouse button
+      *
+      * @param clickType The type of event that is being performed:
+      *                  PICKUP: the stack is trying to be picked up to or dropped from in the player's cursor.
+      *                          If the ID is -999, the player has clicked outside the window and wants to drop
+      *                          the item in-world.
+      *                  QUICK_MOVE: the stack was shift-clicked.
+      *                  SWAP: a number was pressed to swap a hotbar item.
+      *                  CLONE: Player has cloned item while in creative mode.
+      *                  THROW: Hotkey to throw item into the world was pressed.
+      *                  QUICK_CRAFT: The stack in-hand was dragged across several slots to split them up, or just simply
+      *                               right-clicked to deposit one of the items. Handled in super method. Too convoluted
+      *                               to understand, as Forge's documentation sucks. Best to just let MC handle this...
+      *                  PICKUP_ALL: When a slot with an item is double-clicked to pick up all matching items in the container.
+      *
+      *
+      *
+      * @param player The player that has this container open.
+      * @return
+      */
+    override def slotClick(id:Int, dragType:Int, clickType:ClickType, player:EntityPlayer):ItemStack =
+        try //Ignore exceptions raised from client-side only slots that wont be found here. To be removed.
+            if slots.isDefinedAt(id) && (clickType == ClickType.PICKUP || clickType == ClickType.QUICK_MOVE) then
+                val slot = slots(id)
+                if slot.phantomSlot then
+                    return handleGhostClick(slot, dragType, clickType, player)
+            super.slotClick(id, dragType, clickType, player)
+        catch
+            case e:Exception => ItemStack.EMPTY
+
+    private def handleGhostClick(slot:TSlot3, mouse:Int, clickType:ClickType, player:EntityPlayer):ItemStack =
+        val inSlot = slot.getStack
+        val inCursor = player.inventory.getItemStack
+        if !inCursor.isEmpty && !slot.isItemValid(inCursor) then return inCursor
+
+        val stackable = InvWrapper.areItemsStackable(inSlot, inCursor)
+        if stackable then
+            if !inSlot.isEmpty && inCursor.isEmpty then slot.putStack(ItemStack.EMPTY)
+            else if inSlot.isEmpty && !inCursor.isEmpty then
+                val newStack = inCursor.copy
+                newStack.setCount(if mouse == 0 then math.min(inCursor.getCount, slot.getSlotStackLimit) else 1)
+                slot.putStack(newStack)
+            else if !inSlot.isEmpty then
+                val toAdd = if clickType == ClickType.QUICK_MOVE then 10 else 1
+                if mouse == 0 then inSlot.setCount(math.min(slot.getSlotStackLimit, inSlot.getCount+toAdd))
+                else if mouse == 1 then inSlot.setCount(math.max(0, inSlot.getCount-toAdd))
+                if inSlot.getCount > 0 then slot.putStack(inSlot)
+                else slot.putStack(ItemStack.EMPTY)
+        else
+            val newStack = inCursor.copy
+            newStack.setCount(if mouse == 0 then math.min(inCursor.getCount, slot.getSlotStackLimit) else 1)
+            slot.putStack(newStack)
+
+        inCursor
+
+    override def transferStackInSlot(player:EntityPlayer, i:Int):ItemStack =
+        var stack:ItemStack = ItemStack.EMPTY
+        if slots.isDefinedAt(i) then
+            val slot = slots(i)
+            if slot != null && slot.getHasStack then
+                stack = slot.getStack
+                val manipStack = stack.copy
+
+                if !doMerge(player, manipStack, i) || stack.getCount == manipStack.getCount then return ItemStack.EMPTY
+
+                if manipStack.getCount <= 0 then slot.putStack(ItemStack.EMPTY)
+                else slot.putStack(manipStack)
+
+                slot.onTake(player, stack)
+        stack
+
+    def doMerge(player:EntityPlayer, stack:ItemStack, from:Int):Boolean = doMerge(stack, from)
+
+    @deprecated("use doMerge(_:EntityPlayer, _:ItemStack, _:Int)")
+    def doMerge(stack:ItemStack, from:Int):Boolean =
+        if slots.size > 36 then //run standard impl on containers w/ player inventory
+            if slots.size-36 until slots.size contains from then //if item is from player inventory...
+                return tryMergeItemStack(stack, 0, slots.size-36, false) //merge to rest of container
+            else //else if item from outside player inventory...
+                if tryMergeItemStack(stack, slots.size-36, slots.size-27, true) then return true //try merge to hotbar from back
+                if tryMergeItemStack(stack, slots.size-27, slots.size, true) then return true //then try player inventory from back
+
+        false
+
+    def tryMergeItemStack(stack:ItemStack, start:Int, end:Int, reverse:Boolean): Boolean =
+        var flag1 = false
+        var k = if reverse then end-1 else start
+
+        var slot:TSlot3 = null
+        var inslot:ItemStack = ItemStack.EMPTY
+        if stack.isStackable then
+            while stack.getCount > 0 && (!reverse && k < end || reverse && k >= start) do
+                slot = slots(k)
+                inslot = slot.getStack
+                if !slot.phantomSlot && !inslot.isEmpty && inslot.getItem == stack.getItem &&
+                        (!stack.getHasSubtypes || stack.getItemDamage == inslot.getItemDamage) &&
+                        ItemStack.areItemStackTagsEqual(stack, inslot) then
+                    val space = math.min(slot.getSlotStackLimit, stack.getMaxStackSize)-inslot.getCount
+                    if space >= stack.getCount then
+                        inslot.setCount(inslot.getCount + stack.getCount)
+                        stack.setCount(0)
+                        slot.onSlotChanged()
+                        flag1 = true
+                    else if space > 0 then
+                        stack.setCount(stack.getCount - space)
+                        inslot.setCount(inslot.getCount + space)
+                        slot.onSlotChanged()
+                        flag1 = true
+                if reverse then k -= 1 else k += 1
+
+        if stack.getCount > 0 then
+            var k = if reverse then end-1 else start
+
+            import scala.util.control.Breaks.*
+            breakable
+              :
+                while !reverse && k < end || reverse && k >= start do
+                    slot = slots(k)
+                    inslot = slot.getStack
+                    if !slot.phantomSlot && inslot.isEmpty && slot.isItemValid(stack) then
+                        val space = math.min(slot.getSlotStackLimit, stack.getMaxStackSize)
+                        if space >= stack.getCount then
+                            slot.putStack(stack.copy)
+                            slot.onSlotChanged()
+                            stack.setCount(0)
+                            flag1 = true
+                            break()
+                        else
+                            slot.putStack(stack.splitStack(space))
+                            slot.onSlotChanged()
+                            flag1 = true
+                    if reverse then k -= 1 else k += 1
+
+        flag1
+
+    //Hack to allow empty containers for use with guis without inventories
+    override def putStackInSlot(slot:Int, stack:ItemStack): Unit =
+        if inventorySlots.isEmpty || inventorySlots.size < slot then return
+        else super.putStackInSlot(slot, stack)
+
+class Slot3(inv:IInventory, i:Int, x:Int, y:Int) extends Slot(inv, i, x, y) with TSlot3
+:
+    override def getSlotStackLimit:Int = slotLimitCalculator()
+    override def canTakeStack(player:EntityPlayer):Boolean = canRemoveDelegate()
+    override def isItemValid(stack:ItemStack):Boolean = canPlaceDelegate(stack)
+
+    override def onSlotChanged(): Unit =
+        super.onSlotChanged()
+        slotChangeDelegate()
+        slotChangeDelegate2()
+
+trait TSlot3 extends Slot
+:
+    var slotChangeDelegate: () => Unit = { () => }
+    var canRemoveDelegate: () => Boolean = { () => !phantomSlot }
+    var canPlaceDelegate: ItemStack => Boolean = { (stack: ItemStack) => inventory.isItemValidForSlot(getSlotIndex, stack) }
+    var slotLimitCalculator: () => Int = { () => inventory.getInventoryStackLimit }
+
+    var phantomSlot = false
+
+    var slotChangeDelegate2: () => Unit = { () => } //used for container change delegate, do not set yourself!
+
+    //additional methods required for this trait to work are located in class Slot3

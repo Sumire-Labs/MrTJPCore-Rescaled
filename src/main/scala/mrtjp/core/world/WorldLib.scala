@@ -1,0 +1,168 @@
+/*
+ * Copyright (c) 2014.
+ * Created by MrTJP.
+ * All rights reserved.
+ */
+package mrtjp.core.world
+
+import mrtjp.core.math.PerlinNoiseGenerator
+import net.minecraft.block.state.IBlockState
+import net.minecraft.block.{Block, BlockGrass, IGrowable}
+import net.minecraft.entity.item.EntityItem
+import net.minecraft.item.ItemStack
+import net.minecraft.tileentity.TileEntity
+import net.minecraft.util.{EnumFacing, ITickable}
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.*
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage
+import net.minecraftforge.common.IPlantable
+import net.minecraftforge.oredict.OreDictionary
+
+import scala.util.boundary
+import scala.util.boundary.break
+
+object WorldLib
+:
+//    def getTileEntity[T](world:IBlockAccess, pos:BlockPos, clazz:Class[T]):T =
+//    {
+//        val tile = world.getTileEntity(pos)
+//        if (!clazz.isInstance(tile)) null.asInstanceOf[T] else tile.asInstanceOf[T]
+//    }
+
+    def bulkBlockUpdate(world:World, pos:BlockPos, bl:Block): Unit =
+        for a <- -3 to 3 do for b <- -3 to 3 do for c <- -3 to 3 do
+            val md = (if a < 0 then -a else a) + (if b < 0 then -b else b) + (if c < 0 then -c else c)
+            if md <= 3 then
+                val pos2 = new BlockPos(pos.getX+a, pos.getY+b, pos.getZ+c)
+                world.neighborChanged(pos2, bl, pos)
+
+    def dropItem(world:World, pos:BlockPos, stack:ItemStack): Unit =
+        if !world.isRemote && world.getGameRules.getBoolean("doTileDrops") then
+            val d = 0.7D
+            val dx = world.rand.nextFloat*d+(1.0D-d)*0.5D
+            val dy = world.rand.nextFloat*d+(1.0D-d)*0.5D
+            val dz = world.rand.nextFloat*d+(1.0D-d)*0.5D
+            val item = new EntityItem(world, pos.getX+dx, pos.getY+dy, pos.getZ+dz, stack)
+            item.setPickupDelay(10)
+            world.spawnEntity(item)
+
+    def centerEject(w:World, pos:BlockPos, stack:ItemStack, dir:Int, vel:Double): Unit =
+        val pos2 = pos.offset(EnumFacing.values()(dir))
+        val item = new EntityItem(w, pos2.getX+0.5D, pos2.getY+0.5D, pos2.getZ+0.5D, stack)
+
+        item.motionX = 0; item.motionY = 0; item.motionZ = 0
+        item.setPickupDelay(10)
+        dir match
+            case 0 => item.motionY = -vel
+            case 1 => item.motionY =  vel
+            case 2 => item.motionZ = -vel
+            case 3 => item.motionZ =  vel
+            case 4 => item.motionX = -vel
+            case 5 => item.motionX =  vel
+        w.spawnEntity(item)
+
+    def uncheckedSetBlock(world:World, pos:BlockPos, state:IBlockState): Unit =
+        val ch = world.getChunk(pos)
+        val arr = ch.getBlockStorageArray
+        val x = pos.getX
+        val y = pos.getY
+        val z = pos.getZ
+
+        if arr(y>>4) == null then
+            arr(y>>4) = new ExtendedBlockStorage(y&(~0xF),!world.provider.isNether)
+        val oldState = arr(y>>4).get(x&15, y&15, z&15)
+        arr(y>>4).set(x&15, y&15, z&15, state)
+        world.markBlockRangeForRenderUpdate(pos, pos)
+        world.notifyBlockUpdate(pos, oldState, state, 3)
+
+    def uncheckedRemoveTileEntity(world:World, pos:BlockPos): Unit =
+        val ch = world.getChunk(pos)
+        if ch != null then
+            val te = ch.getTileEntityMap.remove(pos)
+            if te != null then
+                world.loadedTileEntityList.removeIf {(t:TileEntity) => t.getPos == pos }
+                world.tickableTileEntities.removeIf {(t:TileEntity) => t.getPos == pos }
+
+    def uncheckedSetTileEntity(world:World, pos:BlockPos, tile:TileEntity): Unit =
+        val ch = world.getChunk(pos)
+        if ch != null then
+            ch.getTileEntityMap.put(pos, tile)
+            world.loadedTileEntityList.add(tile)
+            if tile.isInstanceOf[ITickable] then
+                world.tickableTileEntities.add(tile)
+
+    def uncheckedGetTileEntity(world:World, pos:BlockPos):TileEntity =
+        val ch = world.getChunk(pos)
+        if ch == null then return null
+        ch.getTileEntityMap.get(pos)
+
+    def hasItem(state: IBlockState) : Boolean =
+        val s = new ItemStack(state.getBlock)
+        !s.isEmpty
+
+    def isLeafType(world: World, pos: BlockPos, state: IBlockState): Boolean =
+        state.getBlock.isLeaves(state, world, pos) || (hasItem(state) && OreDictionary.getOreIDs(new ItemStack(state.getBlock)).contains(OreDictionary.getOreID("treeLeaves")))
+
+    def isWoodType(world: World, pos: BlockPos, state: IBlockState): Boolean =
+        state.getBlock.isWood(world, pos) || (hasItem(state) && OreDictionary.getOreIDs(new ItemStack(state.getBlock)).contains(OreDictionary.getOreID("logWood")))
+
+    def isPlantType(world: World, pos: BlockPos, state: IBlockState): Boolean = state.getBlock match
+        case b: IGrowable => !b.isInstanceOf[BlockGrass]
+        case b: IPlantable => true
+        case _ => state.getBlock.isFoliage(world, pos)
+
+    def isBlockSoft(world: World, pos: BlockPos, state: IBlockState): Boolean =
+        state.getBlock.isAir(state, world, pos) || state.getBlock.isReplaceable(world, pos) ||
+          isLeafType(world, pos, state) || isPlantType(world, pos, state) ||
+          state.getBlock.canBeReplacedByLeaves(state, world, pos)
+
+    def isAssociatedTreeBlock(world: World, pos: BlockPos, state: IBlockState): Boolean =
+        import net.minecraft.init.Blocks.*
+        Seq(LOG, LOG2, LEAVES, LEAVES2, VINE, COCOA).contains(state.getBlock) || isLeafType(world, pos, state) || isWoodType(world, pos, state)
+
+    def findSurfaceHeight(world: World, pos: BlockPos): BlockPos =
+        var pos2 = world.getHeight(pos).up()
+        while {
+            pos2 = pos2.down(); pos2.getY >= 0 && {
+                val b = world.getBlockState(pos2); isBlockSoft(world, pos2, b) || isAssociatedTreeBlock(world, pos2, b)
+            }
+        } do ()
+        pos2
+
+    def isBlockTouchingAir(world:World, pos:BlockPos): Boolean =
+        boundary:
+            for s <- 0 until 6 do
+                if world.isAirBlock(pos.offset(EnumFacing.values.apply(s))) then
+                    break(true)
+
+            false
+
+    def isBlockUnderTree(world:World, pos:BlockPos): Boolean =
+        boundary:
+            if world.canBlockSeeSky(pos) then
+                break(false)
+            for h <- pos.getY until world.getHeight do
+                val pos2 = pos.up(h)
+                val b = world.getBlockState(pos2)
+                if isLeafType(world, pos2, b) || isAssociatedTreeBlock(world, pos2, b) then
+                    break(true)
+            false
+
+    def getSkyLightValue(world: World, pos: BlockPos): Int =
+        world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted
+
+    def getBlockLightValue(w: World, pos: BlockPos): Int = w.getLightFor(EnumSkyBlock.BLOCK, pos)
+
+    private val noise = new PerlinNoiseGenerator(2576710L)
+    def getWindSpeed(world:World, pos:BlockPos):Double =
+        if world.provider.isSurfaceWorld then return 0.5D
+        var nv = noise.noise(world.getWorldTime*0.00000085D, 0, 0, 5, 7.5D, 5.0D, true)
+
+        nv = math.max(0.0D, 1.6D*(nv-0.006D)+0.06D)*math.sqrt(pos.getY)/16.0D
+
+        val bgb = world.getBiome(pos)
+        if bgb.canRain then
+            if world.isThundering then return 2.5D*nv
+            else if world.isRaining then return 0.5D+0.5D*nv
+
+        nv
