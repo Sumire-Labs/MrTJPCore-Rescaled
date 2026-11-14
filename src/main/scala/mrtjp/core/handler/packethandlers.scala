@@ -7,6 +7,7 @@ package mrtjp.core.handler
 
 import codechicken.lib.packet.ICustomPacketHandler.{IClientPacketHandler, IServerPacketHandler}
 import codechicken.lib.packet.{ICustomPacketTile, PacketCustom}
+import mrtjp.core.block.MTBlockTile
 import mrtjp.core.data.KeyTracking
 import mrtjp.core.gui.GuiHandler
 import mrtjp.core.world.Messenger
@@ -26,6 +27,7 @@ class MrTJPCorePH
     val keyBindPacket = 4
 
     def handleTilePacket(world:World, packet:PacketCustom, pos:BlockPos): Unit =
+        if world == null || !world.isBlockLoaded(pos) then return
         world.getTileEntity(pos) match
             case cpt:ICustomPacketTile => cpt.readFromPacket(packet)
             case _ =>
@@ -43,13 +45,20 @@ object MrTJPCoreCPH extends MrTJPCorePH with IClientPacketHandler
             case this.tilePacket => handleTilePacket(world, packet, packet.readPos())
             case this.messagePacket => Messenger.addMessage(packet.readDouble, packet.readDouble, packet.readDouble, packet.readString)
             case this.guiPacket => GuiHandler.receiveGuiPacket(packet)
+            case _ =>
 
 object MrTJPCoreSPH extends MrTJPCorePH with IServerPacketHandler
 {
     override def handlePacket(packet:PacketCustom, sender:EntityPlayerMP, nethandler:INetHandlerPlayServer): Unit =
         packet.getType match
             case this.tilePacket =>
-                handleTilePacket(sender.getEntityWorld, packet, packet.readPos())
+                val pos = packet.readPos()
+                val world = sender.getEntityWorld
+                if world.isBlockLoaded(pos) && sender.getDistanceSq(pos) <= 64.0 then
+                    world.getTileEntity(pos) match
+                        case tile:MTBlockTile => tile.readFromClientPacket(packet, sender)
+                        case _ =>
             case this.keyBindPacket =>
                 KeyTracking.updatePlayerKey(packet.readUByte(), sender, packet.readBoolean())
+            case _ =>
 }

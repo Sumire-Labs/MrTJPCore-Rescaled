@@ -21,3 +21,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserve the textbox constructor text.
 - Store key state by UUID, clear it on logout and shutdown, and synchronize access between client and server threads.
 - Reset client tracking on disconnection and ignore unknown tracker IDs.
+
+### Security
+
+- Reject client tile-description packets and limit actions to loaded blocks within eight blocks of the sender.
+- Handle client tile actions through MTBlockTile.readFromClient.

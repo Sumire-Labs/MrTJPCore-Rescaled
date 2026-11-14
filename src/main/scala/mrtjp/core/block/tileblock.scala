@@ -421,8 +421,16 @@ abstract class MTBlockTile extends TileEntity with ICustomPacketTile with ITicka
 
     final override def readFromPacket(packet:MCDataInput): Unit =
         packet.readUByte() match
-            case 0 => readDesc(packet)
+            case 0 if world != null && world.isRemote => readDesc(packet)
+            case 0 =>
             case key => read(packet, key)
+
+    // C2S actions are opt-in; S2C readers never process client payloads.
+    final def readFromClientPacket(packet:MCDataInput, player:EntityPlayer): Unit =
+        val key = packet.readUByte()
+        if key != 0 then readFromClient(packet, key, player)
+
+    def readFromClient(packet:MCDataInput, key:Int, player:EntityPlayer): Unit ={}
 
     final override def writeToPacket(packet:MCDataOutput): Unit =
         writeDesc(packet.writeByte(0))
