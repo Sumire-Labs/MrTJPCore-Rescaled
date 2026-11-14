@@ -17,7 +17,7 @@ keeping package names does not provide Scala 2 binary compatibility.
 ## Development
 
 The build is based on [CleanroomDevEnv](https://github.com/Sumire-Labs/CleanroomDevEnv)
-at `1b7e802`, using CleanroomGradle 0.23.0 and Gradle 9.9.0.
+at `6b24e5c`, using CleanroomGradle 0.23.0 and Gradle 9.9.0.
 Cleanroom userdev supplies the mappings, replacing ForgeGradle 2.3 and snapshot_20171003.
 Dependencies and the Scala version are pinned in `gradle.properties`.
 Use JDK 25 as JAVA_HOME when launching Gradle.

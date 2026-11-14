@@ -15,6 +15,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Sync build support with CleanroomDevEnv at `6b24e5c`.
+
 - Build with CleanroomDevEnv, CleanroomGradle 0.23.0, Gradle 9.9.0 and Java 25.
 - Port the library to Scala 3.9.0 using kappa-maintainer's 1.12.x sources.
 - Use Cleanroom userdev mappings and standard source directories.
@@ -25,6 +27,9 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep the `mrtjpcore` mod ID and `mrtjp.core` packages. Scala 2 consumers must be ported and recompiled for Scala 3.
 
 ### Fixed
+
+- Resolve embedded dependencies as runtime jars and apply token replacement to all compiled classes.
+- Check class-file string constants for unresolved tokens without interpreting binary constants as text.
 
 - Support weighted random totals above the Int limit and reject negative or all-zero weights.
 
