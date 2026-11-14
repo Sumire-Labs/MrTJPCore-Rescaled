@@ -10,8 +10,8 @@ import mrtjp.core.fx.particles.CoreParticle
 
 trait TTargetParticle extends CoreParticle
 :
-    var target = Vector3.zero
-    var prevTarget = Vector3.zero
+    var target = Vector3.zero.copy
+    var prevTarget = Vector3.zero.copy
 
     def tx = target.x
     def ty = target.y
@@ -42,7 +42,7 @@ trait TTargetParticle extends CoreParticle
 
 class TargetChangeToAction extends ParticleAction
 :
-    var target = Vector3.zero
+    var target = Vector3.zero.copy
     var duration = 0.0
 
     override def canOperate(p:CoreParticle) = p.isInstanceOf[TTargetParticle]
@@ -52,9 +52,11 @@ class TargetChangeToAction extends ParticleAction
 
         if time < duration then
             val dpos = target.copy.subtract(tp.target)
-            val speed = dpos.copy.multiply(1/(duration-time)).multiply(deltaTime(time))
+            val speed = dpos.copy.multiply(1/(duration-lastTime)).multiply(deltaTime(time))
             tp.target.add(speed)
-        else isFinished = true
+        else
+            tp.target.set(target)
+            isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 
@@ -62,15 +64,15 @@ class TargetChangeToAction extends ParticleAction
 
 class TargetChangeForAction extends ParticleAction
 {
-    var delta = Vector3.zero
+    var delta = Vector3.zero.copy
     var duration = 0.0
 
     override def canOperate(p:CoreParticle) = p.isInstanceOf[TTargetParticle]
 
     override def operate(p:CoreParticle, time:Double): Unit =
         val tp = p.asInstanceOf[TTargetParticle]
-        if time < duration then tp.target.add(delta.copy.multiply(deltaTime(time)))
-        else isFinished = true
+        tp.target.add(delta.copy.multiply(boundedDeltaTime(time, duration)))
+        if time >= duration then isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 

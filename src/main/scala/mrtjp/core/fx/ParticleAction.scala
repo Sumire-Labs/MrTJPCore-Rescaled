@@ -35,6 +35,9 @@ abstract class ParticleAction
 
     def deltaTime(t:Double) = t-lastTime
 
+    protected def boundedDeltaTime(t:Double, duration:Double):Double =
+        math.max(0.0, math.min(t, duration)-lastTime)
+
     def copy:ParticleAction
 
 object ParticleAction

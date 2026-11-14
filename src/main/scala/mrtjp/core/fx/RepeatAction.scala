@@ -50,6 +50,8 @@ class RepeatForeverAction extends ParticleAction
 {
     var action:ParticleAction = null
 
+    override def canOperate(p:CoreParticle) = action.canOperate(p)
+
     override def tickLife(): Unit =
         super.tickLife()
         action.tickLife()

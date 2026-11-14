@@ -46,14 +46,14 @@ trait TPositionedParticle extends CoreParticle
     def blockPosition = new BlockPos(math.floor(x).toInt, math.floor(y).toInt, math.floor(z).toInt)
 
     abstract override def onUpdate(): Unit =
-        super.onUpdate()
         px = x
         py = y
         pz = z
+        super.onUpdate()
 
 class PositionChangeToAction extends ParticleAction
 :
-    var target = Vector3.zero
+    var target = Vector3.zero.copy
     var duration = 0.0
 
     override def canOperate(p:CoreParticle) = p.isInstanceOf[TPositionedParticle]
@@ -64,9 +64,11 @@ class PositionChangeToAction extends ParticleAction
         val pos = pp.position
         if time < duration then
             val dpos = target.copy.subtract(pos)
-            val speed = dpos.copy.multiply(1/(duration-time)).multiply(deltaTime(time))
+            val speed = dpos.copy.multiply(1/(duration-lastTime)).multiply(deltaTime(time))
             pp.setPos(pos.add(speed))
-        else isFinished = true
+        else
+            pp.setPos(target)
+            isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 
@@ -74,15 +76,15 @@ class PositionChangeToAction extends ParticleAction
 
 class PositionChangeForAction extends ParticleAction
 {
-    var delta = Vector3.zero
+    var delta = Vector3.zero.copy
     var duration = 0.0
 
     override def canOperate(p:CoreParticle) = p.isInstanceOf[TPositionedParticle]
 
     override def operate(p:CoreParticle, time:Double): Unit =
         val pp = p.asInstanceOf[TPositionedParticle]
-        if time < duration then pp.setPos(pp.position.add(delta.copy.multiply(deltaTime(time))))
-        else isFinished = true
+        pp.setPos(pp.position.add(delta.copy.multiply(boundedDeltaTime(time, duration))))
+        if time >= duration then isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 

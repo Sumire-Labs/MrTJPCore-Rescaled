@@ -26,6 +26,11 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep mutable vectors independent between particle actions and beam targets.
+- Interpolate particle changes over the full duration, including the final partial tick.
+- Preserve particle positions before movement for render interpolation.
+- Remove copied particle actions through their original handles and reject incompatible composite actions.
+
 - Return the correct least-significant bit position for even and negative bit masks.
 
 - Center NodeGui windows using their configured size on first display and after resizing.

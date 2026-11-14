@@ -23,7 +23,7 @@ class CoreParticle(w:World) extends Particle(w, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.
     var hasVelocity = false
     var isImmortal = false
 
-    private var actions = ListBuffer[ParticleAction]()
+    private var actions = ListBuffer[(ParticleAction, ParticleAction)]()
 
     def setAge(age:Int): Unit =
         particleAge = age
@@ -37,24 +37,24 @@ class CoreParticle(w:World) extends Particle(w, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.
             throw new RuntimeException("Particle action was run on an incompatible particle class.")
         val a1 = action.copy
         a1.compile(this)
-        actions += a1
+        actions += ((action, a1))
 
     def removeAction(action:ParticleAction): Unit =
-        val idx = actions.indexOf(action)
+        val idx = actions.indexWhere { case (source, running) => (source eq action) || (running eq action) }
         if idx > -1 then
             actions.remove(idx)
 
     override def onUpdate(): Unit =
         if hasVelocity then move(motionX, motionY, motionZ)
 
-        actions.foreach(_.tickLife())
+        actions.foreach(_._2.tickLife())
 
         particleAge += 1
         if particleAge > particleMaxAge && !isImmortal then setExpired()
 
     override def renderParticle(buffer:BufferBuilder, entity:Entity, frame:Float, cosyaw:Float, cospitch:Float, sinyaw:Float, sinsinpitch:Float, cossinpitch:Float): Unit =
-        actions.foreach(_.runOn(this, frame))
-        actions = actions.filterNot(_.isFinished)
+        actions.foreach(_._2.runOn(this, frame))
+        actions = actions.filterNot(_._2.isFinished)
 
     override def shouldDisableDepth = true
 

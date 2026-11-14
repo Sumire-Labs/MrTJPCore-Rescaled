@@ -42,6 +42,7 @@ object ClientSmokeChecks {
             val previousPlayer = mc.player
             try {
                 mc.player = player
+                ParticleChecks.run(world)
                 val resized = new mrtjp.core.gui.NodeGui(100, 80)
                 resized.size = mrtjp.core.vec.Size(200, 120)
                 resized.setWorldAndResolution(mc, 800, 600)

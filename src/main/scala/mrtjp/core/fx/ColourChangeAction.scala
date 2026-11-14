@@ -27,7 +27,7 @@ trait TColourParticle extends CoreParticle
 
 class ColourChangeToAction extends ParticleAction
 :
-    var target = Vector3.zero
+    var target = Vector3.zero.copy
     var duration = 0.0
 
     override def canOperate(p:CoreParticle) = p.isInstanceOf[TColourParticle]
@@ -37,7 +37,7 @@ class ColourChangeToAction extends ParticleAction
 
         if time < duration then
             val drgb = target.copy.subtract(c.rgb)
-            val speed = drgb.copy.multiply(1/(duration-time)).multiply(deltaTime(time))
+            val speed = drgb.copy.multiply(1/(duration-lastTime)).multiply(deltaTime(time))
             c.rgb.add(speed)
 
             if c.rgb.x > 1 then c.rgb.x = 1
@@ -46,7 +46,9 @@ class ColourChangeToAction extends ParticleAction
             if c.rgb.x < 0 then c.rgb.x = 0
             if c.rgb.y < 0 then c.rgb.y = 0
             if c.rgb.z < 0 then c.rgb.z = 0
-        else isFinished = true
+        else
+            c.rgb.set(math.max(0.0, math.min(1.0, target.x)), math.max(0.0, math.min(1.0, target.y)), math.max(0.0, math.min(1.0, target.z)))
+            isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 
@@ -54,22 +56,18 @@ class ColourChangeToAction extends ParticleAction
 
 class ColourChangeForAction extends ParticleAction
 {
-    var delta = Vector3.zero
+    var delta = Vector3.zero.copy
     var duration = 0.0
 
     override def canOperate(p:CoreParticle) = p.isInstanceOf[TColourParticle]
 
     override def operate(p:CoreParticle, time:Double): Unit =
         val c = p.asInstanceOf[TColourParticle]
-        if time < duration then
-            c.rgb.add(delta.copy.multiply(deltaTime(time)))
-            if c.rgb.x > 1 then c.rgb.x = 1
-            if c.rgb.y > 1 then c.rgb.y = 1
-            if c.rgb.z > 1 then c.rgb.z = 1
-            if c.rgb.x < 0 then c.rgb.x = 0
-            if c.rgb.y < 0 then c.rgb.y = 0
-            if c.rgb.z < 0 then c.rgb.z = 0
-        else isFinished = true
+        c.rgb.add(delta.copy.multiply(boundedDeltaTime(time, duration)))
+        c.rgb.x = math.max(0.0, math.min(1.0, c.rgb.x))
+        c.rgb.y = math.max(0.0, math.min(1.0, c.rgb.y))
+        c.rgb.z = math.max(0.0, math.min(1.0, c.rgb.z))
+        if time >= duration then isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 

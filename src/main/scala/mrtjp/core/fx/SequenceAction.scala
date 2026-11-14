@@ -13,6 +13,8 @@ class SequenceAction extends ParticleAction
 {
     var actions = MSeq[ParticleAction]()
 
+    override def canOperate(p:CoreParticle) = actions.forall(_.canOperate(p))
+
     override def tickLife(): Unit =
         super.tickLife()
         actions.find(!_.isFinished) match

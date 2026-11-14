@@ -22,7 +22,7 @@ trait TScalableParticle extends CoreParticle
 
 class ScaleToAction extends ParticleAction
 :
-    var target: Vector3 = Vector3.zero
+    var target: Vector3 = Vector3.zero.copy
     var duration = 0.0
 
     override def canOperate(p: CoreParticle): Boolean = p.isInstanceOf[TScalableParticle]
@@ -32,14 +32,14 @@ class ScaleToAction extends ParticleAction
 
         if time < duration then
             val dscale = target.copy.subtract(s.scale)
-            val speed = dscale.copy.multiply(1/(duration-time)).multiply(deltaTime(time))
+            val speed = dscale.copy.multiply(1/(duration-lastTime)).multiply(deltaTime(time))
             s.scale.add(speed)
 
             //Check for resoulution errors - if any of the values have surpassed taret, then we are close enough
             val dscale2 = target.copy.subtract(s.scale)
-            if dscale2.x.sign == 0 || dscale2.x.sign != dscale.x.sign ||
-                    dscale2.y.sign == 0 || dscale2.y.sign != dscale.y.sign ||
-                    dscale2.z.sign == 0 || dscale2.z.sign != dscale.z.sign then
+            if (dscale2.x.sign == 0 || dscale2.x.sign != dscale.x.sign) &&
+                    (dscale2.y.sign == 0 || dscale2.y.sign != dscale.y.sign) &&
+                    (dscale2.z.sign == 0 || dscale2.z.sign != dscale.z.sign) then
                 isFinished = true
         else isFinished = true
 
@@ -52,15 +52,15 @@ class ScaleToAction extends ParticleAction
 
 class ScaleForAction extends ParticleAction
 {
-    var delta: Vector3 = Vector3.zero
+    var delta: Vector3 = Vector3.zero.copy
     var duration = 0.0
 
     override def canOperate(p: CoreParticle): Boolean = p.isInstanceOf[TScalableParticle]
 
     override def operate(p:CoreParticle, time:Double): Unit =
         val s = p.asInstanceOf[TScalableParticle]
-        if time < duration then s.scale.add(delta.copy.multiply(deltaTime(time)))
-        else isFinished = true
+        s.scale.add(delta.copy.multiply(boundedDeltaTime(time, duration)))
+        if time >= duration then isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 

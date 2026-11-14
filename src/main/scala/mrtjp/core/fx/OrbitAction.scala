@@ -10,7 +10,7 @@ import mrtjp.core.fx.particles.CoreParticle
 
 class OrbitAction extends ParticleAction
 {
-    var target = Vector3.zero
+    var target = Vector3.zero.copy
     var speed = 0.0
     var duration = 0.0
 
@@ -21,14 +21,14 @@ class OrbitAction extends ParticleAction
 
         val dp = new Vector3(p2.x, 0, p2.z).subtract(target)
         val dist = dp.mag
-        val ang = math.atan2(dp.z, dp.x)+speed*deltaTime(time)
+        val ang = math.atan2(dp.z, dp.x)+speed*boundedDeltaTime(time, duration)
         p2.setPosition(
             target.x+math.cos(ang)*dist,
             p2.y,
             target.z+math.sin(ang)*dist
         )
 
-        if time > duration then isFinished = true
+        if time >= duration then isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 

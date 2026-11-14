@@ -23,11 +23,13 @@ class AlphaChangeToAction extends ParticleAction
 
         if time < duration then
             val da = target-p2.alpha
-            val speed = da*(1/(duration-time))*deltaTime(time)
+            val speed = da*(1/(duration-lastTime))*deltaTime(time)
             p2.alpha = p2.alpha+speed
             if p2.alpha > 1.0 then p2.alpha = 1.0
             if p2.alpha < 0.0 then p2.alpha = 0
-        else isFinished = true
+        else
+            p2.alpha = math.max(0.0, math.min(1.0, target))
+            isFinished = true
 
     override def compile(p:CoreParticle): Unit =
     {
@@ -44,12 +46,8 @@ class AlphaChangeForAction extends ParticleAction
 
     override def operate(p:CoreParticle, time:Double): Unit =
         val p2 = p.asInstanceOf[TAlphaParticle]
-
-        if time < duration then
-            p2.alpha = p2.alpha+delta*deltaTime(time)
-            if p2.alpha > 1.0 then p2.alpha = 1.0
-            if p2.alpha < 0.0 then p2.alpha = 0
-        else isFinished = true
+        p2.alpha = math.max(0.0, math.min(1.0, p2.alpha+delta*boundedDeltaTime(time, duration)))
+        if time >= duration then isFinished = true
 
     override def compile(p:CoreParticle): Unit ={}
 
