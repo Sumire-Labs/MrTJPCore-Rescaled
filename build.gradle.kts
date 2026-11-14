@@ -1,4 +1,6 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import me.modmuss50.mpp.ModPublishExtension
+import me.modmuss50.mpp.ReleaseType
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import groovy.json.JsonOutput
 import net.minecraftforge.renamer.gradle.RenameJar
@@ -16,6 +18,7 @@ plugins {
     id("com.gradleup.shadow") version "9.6.1" apply false
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
     id("com.diffplug.spotless") version "8.11.0" apply false
+    id("me.modmuss50.mod-publish-plugin") version "2.2.1" apply false
 }
 
 fun propertyString(name: String): String = providers.gradleProperty(name).get()
@@ -234,8 +237,120 @@ if (shadowEnabled) {
     }
 }
 
+val modDescription = propertyString("mod_description")
+val modUrl = propertyString("mod_url")
+val mavenName = propertyString("maven_name")
+val mavenUrl = propertyString("maven_url")
+val curseforgeProjectId = propertyString("curseforge_project_id")
+val modrinthProjectId = propertyString("modrinth_project_id")
+val remotePublishing = propertyFlag("publish_to_maven")
+val localPublishing = propertyFlag("publish_to_local_maven")
+val reobfJar = tasks.named<RenameJar>("reobfJar")
+
+if (remotePublishing || localPublishing) {
+    configure<PublishingExtension> {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                artifact(reobfJar.flatMap { it.output })
+                artifact(tasks.jar) { classifier = "dev" }
+                if (propertyFlag("generate_sources_jar")) artifact(tasks.named("sourcesJar"))
+                groupId = modPackage
+                artifactId = "MrTJPCore-Rescaled"
+
+                pom {
+                    name.set(modName)
+                    description.set(modDescription)
+                    if (modUrl.isNotBlank()) url.set(modUrl)
+                    licenses {
+                        license {
+                            name.set("GNU Lesser General Public License v3.0")
+                            url.set("https://www.gnu.org/licenses/lgpl-3.0.html")
+                            distribution.set("repo")
+                        }
+                    }
+                }
+            }
+        }
+        if (remotePublishing && !localPublishing) {
+            require(mavenUrl.isNotBlank()) { "Set maven_url before enabling publish_to_maven." }
+            repositories {
+                maven {
+                    name = mavenName
+                    url = uri(mavenUrl)
+                    credentials {
+                        username = providers.environmentVariable("MAVEN_USERNAME")
+                            .orElse(providers.gradleProperty("${mavenName}Username")).orNull
+                        password = providers.environmentVariable("MAVEN_PASSWORD")
+                            .orElse(providers.gradleProperty("${mavenName}Password")).orNull
+                    }
+                }
+            }
+        }
+    }
+}
+
+apply(plugin = "me.modmuss50.mod-publish-plugin")
+configure<ModPublishExtension> {
+    file.set(reobfJar.flatMap { it.output })
+    version.set(modVersion)
+    displayName.set("$modName $modVersion")
+    type.set(versioning.stage.map { stage ->
+        when (stage.name) {
+            "ALPHA" -> ReleaseType.ALPHA
+            "BETA", "RC" -> ReleaseType.BETA
+            else -> ReleaseType.STABLE
+        }
+    })
+    modLoaders.add("forge")
+    maxRetries.set(5)
+    val notes = providers.environmentVariable("CHANGELOG_FILE").orElse("RELEASE_NOTES.md")
+    changelog.set(providers.fileContents(layout.projectDirectory.file(notes)).asText.orElse(""))
+    if (curseforgeProjectId.isNotBlank()) {
+        curseforge {
+            projectId.set(curseforgeProjectId)
+            accessToken.set(providers.environmentVariable("CURSEFORGE_TOKEN"))
+            minecraftVersions.add("1.12.2")
+            client.set(true)
+            server.set(true)
+            javaVersions.add(JavaVersion.VERSION_25)
+            requires("codechicken-lib-cre", "scalar")
+        }
+    }
+    if (modrinthProjectId.isNotBlank()) {
+        modrinth {
+            projectId.set(modrinthProjectId)
+            accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
+            requires("codechicken-lib-cre")
+            minecraftVersions.add("1.12.2")
+        }
+    }
+}
 apply(from = "gradle/scripts/verification.gradle.kts")
 apply(from = "gradle/scripts/extra.gradle.kts")
+
+val releaseType = versioning.stage.map { stage ->
+    when (stage.name) {
+        "ALPHA" -> "alpha"
+        "BETA", "RC" -> "beta"
+        else -> "stable"
+    }
+}
+tasks.register("printReleaseType") {
+    inputs.property("releaseType", releaseType)
+    doLast { println(inputs.properties.getValue("releaseType")) }
+}
+val publishMaven = remotePublishing && !localPublishing
+val publishCurseforge = curseforgeProjectId.isNotBlank()
+val publishModrinth = modrinthProjectId.isNotBlank()
+tasks.register("printReleaseInfo") {
+    inputs.property("info", releaseType.map { type ->
+        JsonOutput.toJson(mapOf(
+            "version" to modVersion, "type" to type, "maven" to publishMaven,
+            "curseforge" to publishCurseforge, "modrinth" to publishModrinth
+        ))
+    })
+    doLast { println(inputs.properties.getValue("info")) }
+}
 
 // Generate before compilation so annotations and TASTy share the same version.
 val versionSources = layout.buildDirectory.dir("generated/sources/version/scala")
@@ -249,6 +364,5 @@ val generateVersion = tasks.register("generateVersion") {
     }
 }
 sourceSets.main { scala.srcDir(generateVersion) }
-
 
 apply(from = "gradle/scripts/smoke.gradle.kts")

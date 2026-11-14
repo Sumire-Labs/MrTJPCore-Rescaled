@@ -7,27 +7,39 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- GitHub Actions checks for builds, regression tests and dedicated-server startup.
+- Tag-based publishing to Maven, CurseForge and Modrinth, with a separate Maven retry workflow.
+- Regression checks for Enum collections, inventory operations, key state cleanup, tile packets and textbox input.
+
 ### Changed
 
-- Migrate to CleanroomDevEnv, Java 25 and Scala 3.9.0.
+- Build with CleanroomDevEnv, CleanroomGradle 0.23.0, Gradle 9.9.0 and Java 25.
+- Port the library to Scala 3.9.0 using kappa-maintainer's 1.12.x sources.
 - Use Cleanroom userdev mappings and standard source directories.
-- Keep the `mrtjpcore` mod ID and `mrtjp.core` packages. Scala 2 consumers must be ported and recompiled.
+- Require Cleanroom 0.7.14-alpha, CodeChickenLib CRE 3.3.10 and Scalar 3.9.0 or newer.
+- Generate version constants before compilation and derive release versions from Git tags.
+- Publish an SRG runtime jar, an MCP-named `dev` jar and a sources jar under `mrtjp.core:MrTJPCore-Rescaled`.
+- Mark alpha, beta and release-candidate tags as GitHub prereleases.
+- Keep the `mrtjpcore` mod ID and `mrtjp.core` packages. Scala 2 consumers must be ported and recompiled for Scala 3.
 
 ### Fixed
 
-- Correct Enum set operations and sorted iteration.
-- Preserve registered inventory wrappers and enforce insertion stack limits.
-- Ignore nonpositive insert/extract amounts and invalid inventory or container slots.
-- Preserve the textbox constructor text.
-- Store key state by UUID, clear it on logout and shutdown, and synchronize access between client and server threads.
-- Reset client tracking on disconnection and ignore unknown tracker IDs.
+- Correct the reversed `Enum.ValSet.incl` and `excl` operations and implement `iteratorFrom`.
+- Preserve custom inventory wrappers registered through `InvWrapper.register`.
+- Enforce item stack limits during insertion and ignore nonpositive insert/extract amounts.
+- Check inventory and container slot bounds before accessing storage.
+- Store tracked key states by UUID and clear them on logout and server shutdown.
+- Synchronize key state access between client and server threads in singleplayer.
+- Reset client key tracking after disconnection and ignore unknown tracker IDs.
+- Preserve textbox constructor text and handle Enter and Backspace on Cleanroom.
+- Preserve the no-argument tile-constructor reflection fix from kappa-maintainer.
+- Exclude Scala test sources when tests are disabled.
 
 ### Security
 
-- Reject client tile-description packets and limit actions to loaded blocks within eight blocks of the sender.
-- Handle client tile actions through MTBlockTile.readFromClient.
+- Reject client tile-description packets and limit tile actions to loaded blocks within eight blocks of the sender.
+- Dispatch client tile actions through the opt-in `MTBlockTile.readFromClient` hook. Consumers must move client action handlers from `read` to this hook and validate permissions and payloads there.
 
-### Added
-
-- Client and dedicated-server regression checks for inventory operations, key state cleanup, tile packets and textbox input.
-- CI checks for builds and installed distribution jars.
+[Unreleased]: https://github.com/Sumire-Labs/MrTJPCore-Rescaled/compare/6f8a17c5d20de0db58f408edaa140a301035cf9e...cleanroom
