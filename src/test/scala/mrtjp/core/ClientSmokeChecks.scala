@@ -25,8 +25,38 @@ object ClientSmokeChecks {
             box.keyPressed_Impl('\r', 28, false)
             assert(returned && !box.focused)
             assert(!box.keyPressed_Impl('x', 45, false))
+            val serverTracker = new mrtjp.core.data.TServerKeyTracker {}
+            serverTracker.register()
+            val clientTracker = new mrtjp.core.data.TClientKeyTracker {
+                def getTracker = serverTracker
+                def getIsKeyDown = false
+            }
+            val connection = new net.minecraft.client.network.NetHandlerPlayClient(mc, null,
+                new net.minecraft.network.NetworkManager(net.minecraft.network.EnumPacketDirection.CLIENTBOUND),
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "SmokePlayer"))
+            val world = new net.minecraft.client.multiplayer.WorldClient(connection,
+                new net.minecraft.world.WorldSettings(0L, net.minecraft.world.GameType.SURVIVAL, false, false, net.minecraft.world.WorldType.FLAT),
+                0, net.minecraft.world.EnumDifficulty.NORMAL, mc.profiler)
+            val player = new net.minecraft.client.entity.EntityPlayerSP(mc, world, connection,
+                new net.minecraft.stats.StatisticsManager(), new net.minecraft.stats.RecipeBook())
+            val previousPlayer = mc.player
+            try {
+                mc.player = player
+                clientTracker.tick(new ClientTickEvent(Phase.END))
+                mrtjp.core.data.KeyTracking.updatePlayerKey(serverTracker.id, player, true)
+                assert(serverTracker.isKeyDown(player))
+                mc.player = null
+                clientTracker.tick(new ClientTickEvent(Phase.END))
+                assert(!serverTracker.isKeyDown(player), "Disconnect must clear the tracked player's key state")
+                mc.player = player
+                clientTracker.tick(new ClientTickEvent(Phase.END))
+                assert(!serverTracker.isKeyDown(player), "Reconnect must not restore stale key state")
+            } finally {
+                mc.player = previousPlayer
+                clientTracker.tick(new ClientTickEvent(Phase.END))
+            }
             Files.writeString(Path.of(System.getProperty("mrtjpcore.client.result")), "PASS\n")
-            println("MRTJPCORE_CLIENT_PASS: main menu loaded, textbox initialization and keyboard input")
+            println("MRTJPCORE_CLIENT_PASS: main menu loaded, textbox input and key disconnect cleanup")
         } finally { mc.shutdown() }
     }
 }

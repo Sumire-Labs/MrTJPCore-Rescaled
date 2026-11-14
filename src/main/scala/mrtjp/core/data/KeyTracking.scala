@@ -52,6 +52,10 @@ object KeyTracking
 
     def clearStates(): Unit = synchronized { map.values.foreach(_.clear()) }
 
+    private[core] def clearPlayerKey(id:Int, playerId:UUID): Unit = synchronized {
+        map.get(id).foreach(_.remove(playerId))
+    }
+
 trait TServerKeyTracker
 :
     var id = -1
@@ -64,6 +68,7 @@ trait TServerKeyTracker
 trait TClientKeyTracker
 {
     private var wasDown = false
+    private var trackedPlayer:UUID = null
 
     def getTracker:TServerKeyTracker
 
@@ -74,18 +79,22 @@ trait TClientKeyTracker
     def tick(event:ClientTickEvent): Unit =
         if event.phase != net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END then return
         val mc = Minecraft.getMinecraft
-        if mc.player == null || mc.getConnection == null then
+        val player = mc.player
+        val connected = player != null && mc.getConnection != null
+        val playerId = if connected then player.getUniqueID else null
+        if trackedPlayer != playerId then
+            if trackedPlayer != null then KeyTracking.clearPlayerKey(getTracker.id, trackedPlayer)
+            trackedPlayer = playerId
             wasDown = false
-            return
+        if !connected then return
         val down = getIsKeyDown
         if down != wasDown then
             wasDown = down
-            if Minecraft.getMinecraft.getConnection != null then
-                KeyTracking.updatePlayerKey(getTracker.id, Minecraft.getMinecraft.player, down)
-                val packet = new PacketCustom(MrTJPCoreSPH.channel, MrTJPCoreSPH.keyBindPacket)
-                packet.writeByte(getTracker.id)
-                packet.writeBoolean(down)
-                packet.sendToServer()
+            KeyTracking.updatePlayerKey(getTracker.id, player, down)
+            val packet = new PacketCustom(MrTJPCoreSPH.channel, MrTJPCoreSPH.keyBindPacket)
+            packet.writeByte(getTracker.id)
+            packet.writeBoolean(down)
+            packet.sendToServer()
 
     @SideOnly(Side.CLIENT)
     def register(): Unit =

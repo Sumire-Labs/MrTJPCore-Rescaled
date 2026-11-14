@@ -36,6 +36,7 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Store tracked key states by UUID and clear them on logout and server shutdown.
 - Synchronize key state access between client and server threads in singleplayer.
 - Reset client key tracking after disconnection and ignore unknown tracker IDs.
+- Clear stored client key state when the tracked player disconnects or changes.
 - Preserve textbox constructor text and handle Enter and Backspace on Cleanroom.
 - Preserve the no-argument tile-constructor reflection fix from kappa-maintainer.
 - Exclude Scala test sources when tests are disabled.
