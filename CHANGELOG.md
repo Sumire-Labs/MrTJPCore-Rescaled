@@ -26,6 +26,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Support weighted random totals above the Int limit and reject negative or all-zero weights.
+
 - Stop consumed GUI mouse events from reaching the backing container.
 - Detect crossing rectangle intersections even when no corners are contained.
 

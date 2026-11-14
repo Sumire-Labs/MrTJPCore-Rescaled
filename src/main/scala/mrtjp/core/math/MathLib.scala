@@ -85,7 +85,11 @@ object MathLib
         31-Integer.numberOfLeadingZeros(mask)
 
     def weightedRandom[T](xs:Iterable[(T, Int)], rand:Random = random):T =
-        if xs.size == 1 then return xs.head._1
-        var weight = rand.nextInt(xs.map(_._2).sum)
-        xs.find(x => {weight -= x._2; weight < 0}).get._1
+        val entries = xs.toVector
+        require(entries.forall(_._2 >= 0), "Weights must be nonnegative")
+        val total = entries.foldLeft(0L)((sum, entry) => sum+entry._2.toLong)
+        require(total > 0, "At least one weight must be positive")
+        if entries.size == 1 then return entries.head._1
+        var weight = if total <= Int.MaxValue then rand.nextInt(total.toInt).toLong else rand.nextLong(total)
+        entries.find(x => {weight -= x._2; weight < 0}).get._1
 }
