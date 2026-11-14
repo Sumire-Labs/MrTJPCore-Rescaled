@@ -8,6 +8,7 @@ package mrtjp.core.gui
 import mrtjp.core.vec.{Point, Rect, Size}
 import net.minecraft.client.gui.ScaledResolution
 import org.lwjgl.opengl.GL11
+import org.lwjgl.system.MemoryStack
 
 class ClipNode extends TNode
 :
@@ -22,9 +23,10 @@ class ClipNode extends TNode
                 else
                     onChildPredraw()
                     translateTo()
-                    n.drawBack(dp, rframe)
-                    translateFrom()
-                    onChildPostdraw()
+                    try n.drawBack(dp, rframe)
+                    finally
+                        translateFrom()
+                        onChildPostdraw()
 
     override protected[gui] def drawFront(mouse:Point, rframe:Float): Unit =
         if !hidden then
@@ -34,9 +36,10 @@ class ClipNode extends TNode
                 else
                     onChildPredraw()
                     translateTo()
-                    n.drawFront(dp, rframe)
-                    translateFrom()
-                    onChildPostdraw()
+                    try n.drawFront(dp, rframe)
+                    finally
+                        translateFrom()
+                        onChildPostdraw()
 
     private def onChildPredraw(): Unit =
         val scaleRes = new ScaledResolution(mcInst)
@@ -46,11 +49,24 @@ class ClipNode extends TNode
         val sFrame = new Rect(absPos.x*scale, mcInst.displayHeight-(absPos.y*scale)-size.height*scale,
             size.width*scale, size.height*scale)
 
+        GL11.glPushAttrib(GL11.GL_SCISSOR_BIT)
+        val clipped = if GL11.glIsEnabled(GL11.GL_SCISSOR_TEST) then
+            val stack = MemoryStack.stackPush()
+            try
+                val parentBox = stack.mallocInt(4)
+                GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, parentBox)
+                val left = math.max(sFrame.x, parentBox.get(0))
+                val bottom = math.max(sFrame.y, parentBox.get(1))
+                val right = math.min(sFrame.maxX, parentBox.get(0)+parentBox.get(2))
+                val top = math.min(sFrame.maxY, parentBox.get(1)+parentBox.get(3))
+                new Rect(left, bottom, math.max(0, right-left), math.max(0, top-bottom))
+            finally stack.close()
+        else sFrame
         GL11.glEnable(GL11.GL_SCISSOR_TEST)
-        GL11.glScissor(sFrame.x, sFrame.y, sFrame.width, sFrame.height)
+        GL11.glScissor(clipped.x, clipped.y, math.max(0, clipped.width), math.max(0, clipped.height))
 
     private def onChildPostdraw(): Unit =
-        GL11.glDisable(GL11.GL_SCISSOR_TEST)
+        GL11.glPopAttrib()
 
     override def traceHit(absPoint:Point) = !super.traceHit(absPoint)//only let hits within frame pass through
 
