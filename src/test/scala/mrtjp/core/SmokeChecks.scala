@@ -54,6 +54,24 @@ object SmokeChecks {
         assert(wrapped.injectItem(apple, -1) == 0)
         assert(limited.getStackInSlot(1).getCount == 5)
 
+        assert(wrapped.getSpaceForItem(apple) == 59) // Overfull slots contribute zero space.
+        for (capability <- Seq(false, true); hideSlot <- Seq(false, true); hideType <- Seq(false, true) if !(hideSlot && hideType)) {
+            val storage = new SimpleInventory(3, "hidden", 64)
+            storage.setInventorySlotContents(0, new ItemStack(Items.STICK, 1))
+            storage.setInventorySlotContents(1, new ItemStack(Items.APPLE, 1))
+            storage.setInventorySlotContents(2, new ItemStack(Items.APPLE, 1))
+            val view: mrtjp.core.inventory.InvWrapper = if (capability)
+                new mrtjp.core.inventory.CapWrapper(new net.minecraftforge.items.wrapper.InvWrapper(storage))
+            else mrtjp.core.inventory.InvWrapper.wrapInternal(storage)
+            view.setHidePerSlot(hideSlot)
+            view.setHidePerType(hideType)
+            val expected = if (hideSlot) 0 else if (hideType) 1 else 2
+            assert(view.getItemCount(apple) == expected)
+            assert(view.hasItem(apple) == (expected > 0))
+            assert(view.extractItem(apple, 10) == expected)
+            assert(view.getItemCount(apple) == 0 && !view.hasItem(apple))
+        }
+
         val container = new mrtjp.core.gui.NodeContainer
         container.putStackInSlot(0, ItemStack.EMPTY)
         container.addSlotToContainer(new mrtjp.core.gui.Slot3(limited, 0, 0, 0))

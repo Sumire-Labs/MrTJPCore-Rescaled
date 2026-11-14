@@ -214,9 +214,6 @@ abstract class InvWrapper
      */
     def getAllItemStacks:Map[ItemKey, Int]
 
-/**
-  * TODO make these wrapper methods take into account hidePerType and hidePerSlot
-  */
 class CapWrapper(cap:IItemHandler) extends InvWrapper
 :
     override def getSpaceForItem(item:ItemKey) =
@@ -240,18 +237,23 @@ class CapWrapper(cap:IItemHandler) extends InvWrapper
 
     override def getItemCount(item: ItemKey): Int =
         var count = 0
+        var first = true
         for s <- 0 until cap.getSlots do
             val slotItem = ItemKeyStack.get(cap.getStackInSlot(s))
             if !slotItem.isEmpty && eq.matches(item, slotItem.key) then
-                count += slotItem.stackSize
+                count += slotItem.stackSize - (if hidePerSlot || hidePerType && first then 1 else 0)
+                first = false
         count
 
     override def hasItem(item:ItemKey): Boolean =
         boundary:
+            var first = true
             for s <- 0 until cap.getSlots do
                 val slotItem = ItemKeyStack.get(cap.getStackInSlot(s))
                 if !slotItem.isEmpty && eq.matches(item, slotItem.key) then
-                    break(true)
+                    val available = slotItem.stackSize - (if hidePerSlot || hidePerType && first then 1 else 0)
+                    if available > 0 then break(true)
+                    first = false
             false
 
     override def injectItem(item:ItemKey, toAdd:Int):Int =
@@ -346,7 +348,7 @@ class VanillaWrapper(inv:IInventory, internalMode:Boolean) extends InvWrapper
             val s = inv.getStackInSlot(slot)
             if canInsertItem(slot, item2) then
                 if s.isEmpty then space += slotStackLimit
-                else if InvWrapper.areItemsStackable(s, item2) then space += slotStackLimit-s.getCount
+                else if InvWrapper.areItemsStackable(s, item2) then space += math.max(0, slotStackLimit-s.getCount)
         space
 
     override def hasSpaceForItem(item:ItemKey):Boolean =
@@ -377,10 +379,13 @@ class VanillaWrapper(inv:IInventory, internalMode:Boolean) extends InvWrapper
 
     override def hasItem(item:ItemKey):Boolean =
         boundary:
+            var first = true
             for slot <- slots do
                 val inSlot = inv.getStackInSlot(slot)
                 if !inSlot.isEmpty && eq.matches(item, ItemKey.get(inSlot)) then
-                    break(true)
+                    val available = inSlot.getCount - (if hidePerSlot || hidePerType && first then 1 else 0)
+                    if available > 0 then break(true)
+                    first = false
 
             false
 

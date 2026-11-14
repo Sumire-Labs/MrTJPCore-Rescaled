@@ -26,6 +26,9 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Honor hidden-item settings in capability inventory counts and inventory availability checks.
+- Treat overfull inventory slots as having no free insertion space.
+
 - Correct the reversed `Enum.ValSet.incl` and `excl` operations and implement `iteratorFrom`.
 - Preserve custom inventory wrappers registered through `InvWrapper.register`.
 - Enforce item stack limits during insertion and ignore nonpositive insert/extract amounts.
