@@ -26,6 +26,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Return the correct least-significant bit position for even and negative bit masks.
+
 - Center NodeGui windows using their configured size on first display and after resizing.
 
 - Match biome filters against Scala sets and scan tree canopies from the correct world height.

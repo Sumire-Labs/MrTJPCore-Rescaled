@@ -78,10 +78,7 @@ object MathLib
     def randomFromIntRange(az:Range, rand:Random = random) = az(rand.nextInt(az.size))
 
     def leastSignificant(mask:Int) =
-        var bit = 0
-        var m = mask
-        while (m&1) == 0 && m != 0 do { bit += 1; m <<= 1 }
-        bit
+        if mask == 0 then 0 else Integer.numberOfTrailingZeros(mask)
 
     def mostSignificant(mask:Int):Int =
         if mask == 0 then return 0
