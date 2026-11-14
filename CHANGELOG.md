@@ -19,3 +19,5 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserve registered inventory wrappers and enforce insertion stack limits.
 - Ignore nonpositive insert/extract amounts and invalid inventory or container slots.
 - Preserve the textbox constructor text.
+- Store key state by UUID, clear it on logout and shutdown, and synchronize access between client and server threads.
+- Reset client tracking on disconnection and ignore unknown tracker IDs.

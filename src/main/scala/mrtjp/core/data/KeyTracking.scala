@@ -16,23 +16,41 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent
 import net.minecraftforge.fml.relauncher.{Side, SideOnly}
 
+import java.util.UUID
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent
 import scala.collection.mutable.{HashMap as MHashMap, Map as MMap}
 
 object KeyTracking
 :
     private var idPool = 0
-    private val map = MHashMap[Int, MMap[EntityPlayer, Boolean]]()
+    private val map = MHashMap[Int, MMap[UUID, Boolean]]()
 
-    def updatePlayerKey(id:Int, player:EntityPlayer, state:Boolean): Unit =
-        map(id) += player -> state
+    def updatePlayerKey(id:Int, player:EntityPlayer, state:Boolean): Unit = synchronized {
+        if player != null then map.get(id).foreach { states =>
+            if state then states(player.getUniqueID) = true else states.remove(player.getUniqueID)
+        }
+    }
 
-    def registerTracker(tracker:TServerKeyTracker): Unit =
+    def registerTracker(tracker:TServerKeyTracker): Unit = synchronized {
+        require(idPool < 256, "Key tracker IDs are encoded as one byte")
         tracker.id = idPool
         idPool += 1
         map.getOrElseUpdate(tracker.id,
-            MHashMap[EntityPlayer, Boolean]().withDefaultValue(false))
+            MHashMap[UUID, Boolean]().withDefaultValue(false))
+    }
 
-    def isKeyDown(id:Int, player:EntityPlayer) = map(id)(player)
+    MinecraftForge.EVENT_BUS.register(this)
+
+    def isKeyDown(id:Int, player:EntityPlayer): Boolean = synchronized {
+        player != null && map.get(id).exists(_.getOrElse(player.getUniqueID, false))
+    }
+
+    @SubscribeEvent
+    def onLogout(event:PlayerLoggedOutEvent): Unit = synchronized {
+        map.values.foreach(_.remove(event.player.getUniqueID))
+    }
+
+    def clearStates(): Unit = synchronized { map.values.foreach(_.clear()) }
 
 trait TServerKeyTracker
 :
@@ -54,6 +72,11 @@ trait TClientKeyTracker
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     def tick(event:ClientTickEvent): Unit =
+        if event.phase != net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END then return
+        val mc = Minecraft.getMinecraft
+        if mc.player == null || mc.getConnection == null then
+            wasDown = false
+            return
         val down = getIsKeyDown
         if down != wasDown then
             wasDown = down

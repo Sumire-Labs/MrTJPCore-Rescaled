@@ -15,6 +15,10 @@ import org.apache.logging.log4j.LogManager
 @Mod(modid = "mrtjpcore", name = "MrTJPCore Rescaled", version = Reference.VERSION, useMetadata = true, modLanguage = "scala", guiFactory = "mrtjp.core.handler.GuiConfigFactory")
 object MrTJPCoreMod
 :
+    @Mod.EventHandler
+    def onServerStopped(event:net.minecraftforge.fml.common.event.FMLServerStoppedEvent): Unit =
+        mrtjp.core.data.KeyTracking.clearStates()
+
     val log = LogManager.getFormatterLogger("MrTJPCore")
 
     @Mod.EventHandler
