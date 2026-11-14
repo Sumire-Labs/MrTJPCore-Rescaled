@@ -14,7 +14,9 @@ import scala.language.implicitConversions
 
 object ItemKey
 :
-    def get(stack:ItemStack):ItemKey = new ItemKey(stack.getItem, stack.getItemDamage, stack.getTagCompound)
+    def get(stack:ItemStack):ItemKey =
+        val tag = stack.getTagCompound
+        new ItemKey(stack.getItem, stack.getItemDamage, if tag == null then null else tag.copy())
 
     @deprecated("Use nonnull standard")
     def getOrNull(stack:ItemStack):ItemKey =
@@ -26,7 +28,7 @@ class ItemKey(val item:Item, val itemDamage:Int, val tag:NBTTagCompound) extends
     lazy val testStack: ItemStack = makeStack(1)
     lazy val itemID: Int = Item.getIdFromItem(item)
 
-    private val hash = itemID*1000001*itemDamage+(if tag != null then tag.hashCode else 0)
+    private val hash = 31*(31*itemID+itemDamage)+(if tag != null then tag.hashCode else 0)
 
     override def hashCode: Int = hash
 
@@ -48,7 +50,7 @@ class ItemKey(val item:Item, val itemDamage:Int, val tag:NBTTagCompound) extends
         if tag != null then stack.setTagCompound(tag.copy())
         stack
 
-    def copy = new ItemKey(item, itemDamage, tag)
+    def copy = new ItemKey(item, itemDamage, if tag == null then null else tag.copy())
 
     def isEmpty: Boolean = testStack.isEmpty
 

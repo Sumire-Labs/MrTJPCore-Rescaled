@@ -26,6 +26,9 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Copy source NBT when creating or copying item keys so later tag changes do not alter existing keys.
+- Include the item ID in hashes for undamaged items.
+
 - Keep mutable vectors independent between particle actions and beam targets.
 - Interpolate particle changes over the full duration, including the final partial tick.
 - Preserve particle positions before movement for render interpolation.

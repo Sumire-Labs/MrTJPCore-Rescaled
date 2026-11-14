@@ -61,6 +61,24 @@ object SmokeChecks {
         assert(restored.decrStackSize(0, 3).getCount == 3)
         assert(restored.getStackInSlot(0).getCount == 4)
 
+        val taggedStack = new ItemStack(Items.APPLE)
+        val sourceTag = new NBTTagCompound()
+        sourceTag.setInteger("revision", 1)
+        taggedStack.setTagCompound(sourceTag)
+        val snapshot = mrtjp.core.item.ItemKey.get(taggedStack)
+        val lookup = Map(snapshot -> "saved")
+        sourceTag.setInteger("revision", 2)
+        assert(snapshot.tag.getInteger("revision") == 1)
+        assert(lookup.get(mrtjp.core.item.ItemKey.get(snapshot.makeStack(1))).contains("saved"))
+        val keyCopy = snapshot.copy
+        keyCopy.tag.setInteger("revision", 3)
+        assert(snapshot.tag.getInteger("revision") == 1)
+        val stackCopy = snapshot.makeStack(1)
+        stackCopy.getTagCompound.setInteger("revision", 4)
+        assert(snapshot.tag.getInteger("revision") == 1)
+        assert(mrtjp.core.item.ItemKey.get(new ItemStack(Items.APPLE)).hashCode !=
+            mrtjp.core.item.ItemKey.get(new ItemStack(Items.STICK)).hashCode)
+
         val originalWrappers = mrtjp.core.inventory.InvWrapper.wrappers
         val custom = new mrtjp.core.inventory.VanillaWrapper(inventory, true)
         try {
