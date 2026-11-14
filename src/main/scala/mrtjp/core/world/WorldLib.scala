@@ -142,7 +142,7 @@ object WorldLib
             if world.canBlockSeeSky(pos) then
                 break(false)
             for h <- pos.getY until world.getHeight do
-                val pos2 = pos.up(h)
+                val pos2 = new BlockPos(pos.getX, h, pos.getZ)
                 val b = world.getBlockState(pos2)
                 if isLeafType(world, pos2, b) || isAssociatedTreeBlock(world, pos2, b) then
                     break(true)

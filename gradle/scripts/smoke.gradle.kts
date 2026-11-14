@@ -26,7 +26,7 @@ if (providers.gradleProperty("smoke_test").orElse("false").get().toBoolean()) {
 }
 val smokeJar = tasks.register<Jar>("smokeJar") {
     from(sourceSets.getByName("test").output)
-    include("mrtjp/core/ServerSmokeMod*", "mrtjp/core/SmokeChecks*", "mcmod.info")
+    include("mrtjp/core/ServerSmokeMod*", "mrtjp/core/SmokeChecks*", "mrtjp/core/WorldChecks*", "mcmod.info")
     archiveClassifier.set("smoke-mcp")
     destinationDirectory.set(layout.buildDirectory.dir("smoke"))
 }

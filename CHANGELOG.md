@@ -26,6 +26,9 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Match biome filters against Scala sets and scan tree canopies from the correct world height.
+- Apply decorator placement rules when checkStay is enabled and honor the underTree filter.
+
 - Read and save empty configuration arrays without throwing or changing their value type.
 
 - Honor hidden-item settings in capability inventory counts and inventory availability checks.

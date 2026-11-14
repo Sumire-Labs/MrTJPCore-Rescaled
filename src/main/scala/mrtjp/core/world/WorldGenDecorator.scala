@@ -46,7 +46,8 @@ class WorldGenDecorator extends TWorldGenerator
                 import scala.util.control.Breaks.*
                 breakable(for s <- 0 to h do
                 {
-                    if !checkStay then generated |= w.setBlockState(new BlockPos(x, y, z), state, 2)
+                    val target = new BlockPos(x, y, z)
+                    if !checkStay || b.canPlaceBlockAt(w, target) then generated |= w.setBlockState(target, state, 2)
                     else break()
                     y += 1
                     if !canSetBlock(w, new BlockPos(x, y, z), material) then break()
@@ -56,6 +57,7 @@ class WorldGenDecorator extends TWorldGenerator
     def checkLocation(w:World, x:Int, y:Int, z:Int):Boolean =
         val pos = new BlockPos(x,y,z)
         if seeSky && !w.canSeeSky(pos) then return false
+        if underTree && !WorldLib.isBlockUnderTree(w, pos) then return false
         if !canSetBlock(w, pos, material) then return false
         if !canSetBlock(w, pos.down(), soil) then return false
         true
