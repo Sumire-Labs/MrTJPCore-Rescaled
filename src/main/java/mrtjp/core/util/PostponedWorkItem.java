@@ -32,7 +32,15 @@ public class PostponedWorkItem<T> implements Delayed
     @Override
     public long getDelay(TimeUnit unit)
     {
-        return unit.convert(delay - (System.currentTimeMillis() - origin), TimeUnit.MILLISECONDS);
+        return unit.convert(remainingAt(System.currentTimeMillis()), TimeUnit.MILLISECONDS);
+    }
+
+    private long remainingAt(long now)
+    {
+        long elapsed = now - origin;
+        if (elapsed > 0 && delay < Long.MIN_VALUE + elapsed) return Long.MIN_VALUE;
+        if (elapsed < 0 && delay > Long.MAX_VALUE + elapsed) return Long.MAX_VALUE;
+        return delay - elapsed;
     }
 
     @Override
@@ -41,13 +49,12 @@ public class PostponedWorkItem<T> implements Delayed
         if (delayed == this)
             return 0;
 
-        if (delayed instanceof PostponedWorkItem)
+        if (delayed instanceof PostponedWorkItem<?>)
         {
-            long diff = delay - ((PostponedWorkItem) delayed).delay;
-            return ((diff == 0) ? 0 : ((diff < 0) ? -1 : 1));
+            long now = System.currentTimeMillis();
+            return Long.compare(remainingAt(now), ((PostponedWorkItem<?>) delayed).remainingAt(now));
         }
 
-        long d = (getDelay(TimeUnit.MILLISECONDS) - delayed.getDelay(TimeUnit.MILLISECONDS));
-        return ((d == 0) ? 0 : ((d < 0) ? -1 : 1));
+        return Long.compare(getDelay(TimeUnit.NANOSECONDS), delayed.getDelay(TimeUnit.NANOSECONDS));
     }
 }

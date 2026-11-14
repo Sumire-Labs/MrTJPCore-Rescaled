@@ -28,6 +28,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Order delayed work by its completion time and prevent extreme delays from overflowing.
+
 - Check project bytecode versions without rejecting libraries relocated into the project namespace.
 
 - Resolve embedded dependencies as runtime jars and apply token replacement to all compiled classes.
