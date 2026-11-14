@@ -28,6 +28,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Run block update hooks only on loaded chunks, avoiding forced loads and missing-chunk accesses (related to [MrTJPCore #23](https://github.com/MrTJP/MrTJPCore/issues/23) and [#38](https://github.com/MrTJP/MrTJPCore/issues/38)).
+
 - Handle collapsed item lists without division by zero and use current widget size and position when drawing.
 
 - Intersect nested scissor regions and restore the previous scissor state after drawing or errors.
@@ -79,9 +81,9 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserve custom inventory wrappers registered through `InvWrapper.register`.
 - Enforce item stack limits during insertion and ignore nonpositive insert/extract amounts.
 - Check inventory and container slot bounds before accessing storage.
-- Store tracked key states by UUID and clear them on logout and server shutdown.
+- Store tracked key states by UUID and clear them on logout and server shutdown ([MrTJPCore #32](https://github.com/MrTJP/MrTJPCore/issues/32)).
 - Synchronize key state access between client and server threads in singleplayer.
-- Reset client key tracking after disconnection and ignore unknown tracker IDs.
+- Reset client key tracking after disconnection and ignore unknown tracker IDs ([MrTJPCore #31](https://github.com/MrTJP/MrTJPCore/issues/31)).
 - Clear stored client key state when the tracked player disconnects or changes.
 - Preserve textbox constructor text and handle Enter and Backspace on Cleanroom.
 - Preserve the no-argument tile-constructor reflection fix from kappa-maintainer.
@@ -89,7 +91,7 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-- Reject client tile-description packets and limit tile actions to loaded blocks within eight blocks of the sender.
+- Reject client tile-description packets and limit tile actions to loaded blocks within eight blocks of the sender ([MrTJPCore #37](https://github.com/MrTJP/MrTJPCore/issues/37)).
 - Dispatch client tile actions through the opt-in `MTBlockTile.readFromClient` hook. Consumers must move client action handlers from `read` to this hook and validate permissions and payloads there.
 
 [Unreleased]: https://github.com/Sumire-Labs/MrTJPCore-Rescaled/compare/6f8a17c5d20de0db58f408edaa140a301035cf9e...cleanroom

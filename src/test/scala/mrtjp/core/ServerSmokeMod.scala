@@ -22,6 +22,7 @@ class ServerSmokeMod {
             SmokeChecks.run(player)
             WorldChecks.run(server.getWorld(0), player)
             RetrogenChecks.run(server.getWorld(0))
+            TickHookChecks.run(server.getWorld(0), player)
             Files.writeString(Path.of(result), "PASS\n")
             println("MRTJPCORE_SMOKE_PASS: inventory bounds/NBT, key state cleanup, C2S description rejection")
         } finally {

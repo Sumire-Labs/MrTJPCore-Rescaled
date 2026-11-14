@@ -63,29 +63,30 @@ object BlockUpdateHandler
         val cIt = getActiveChunkSet(world).iterator()
         while cIt.hasNext do
             val chunkPos = cIt.next()
-            val chunk = world.getChunk(chunkPos.x, chunkPos.z)
-            val ebstorage = chunk.getBlockStorageArray
+            val chunk = world.getChunkProvider.getLoadedChunk(chunkPos.x, chunkPos.z)
+            if chunk != null then
+                val ebstorage = chunk.getBlockStorageArray
 
-            var k = 0
-            while k < ebstorage.length do
-                val ebs = ebstorage(k)
-                if ebs != null then
-                    var i = 0
-                    while i < 3 do
-                        updateLCG = updateLCG*3+1013904223
-                        val i2 = updateLCG>>2
-                        val j2 = i2&15
-                        val k2 = i2>>8&15
-                        val l2 = i2>>16&15
-                        val block = ebs.get(j2, l2, k2)
+                var k = 0
+                while k < ebstorage.length do
+                    val ebs = ebstorage(k)
+                    if ebs != null then
+                        var i = 0
+                        while i < 3 do
+                            updateLCG = updateLCG*3+1013904223
+                            val i2 = updateLCG>>2
+                            val j2 = i2&15
+                            val k2 = i2>>8&15
+                            val l2 = i2>>16&15
+                            val block = ebs.get(j2, l2, k2)
 
-                        var j = 0
-                        while j < handlers.length do
-                            val p = new BlockPos(j2+chunk.x*16, l2+ebs.getYLocation, k2+chunk.z*16)
-                            handlers(j).onBlockUpdate(world, p, block)
-                            j += 1
-                        i += 1
-                k += 1
+                            var j = 0
+                            while j < handlers.length do
+                                val p = new BlockPos(j2+chunk.x*16, l2+ebs.getYLocation, k2+chunk.z*16)
+                                handlers(j).onBlockUpdate(world, p, block)
+                                j += 1
+                            i += 1
+                    k += 1
 
 trait IBlockEventHandler
 :
