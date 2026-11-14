@@ -251,3 +251,4 @@ val generateVersion = tasks.register("generateVersion") {
 sourceSets.main { scala.srcDir(generateVersion) }
 
 
+apply(from = "gradle/scripts/smoke.gradle.kts")

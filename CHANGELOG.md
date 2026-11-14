@@ -26,3 +26,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Reject client tile-description packets and limit actions to loaded blocks within eight blocks of the sender.
 - Handle client tile actions through MTBlockTile.readFromClient.
+
+### Added
+
+- Client and dedicated-server regression checks for inventory operations, key state cleanup, tile packets and textbox input.
+- CI checks for builds and installed distribution jars.
