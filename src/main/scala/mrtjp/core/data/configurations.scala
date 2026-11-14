@@ -41,7 +41,11 @@ abstract class ModConfig(modID:String)
             import net.minecraftforge.common.config.Property.Type.*
             @tailrec
             def getType(value:Any):Property.Type = value match
-                case xs:Array[_] => getType(xs.head)
+                case _:Array[Boolean] => BOOLEAN
+                case _:Array[Int] => INTEGER
+                case _:Array[Double] => DOUBLE
+                case _:Array[String] => STRING
+                case xs:Array[_] => if xs.isEmpty then STRING else getType(xs.head)
                 case b:Boolean   => BOOLEAN
                 case i:Int       => INTEGER
                 case s:String    => STRING

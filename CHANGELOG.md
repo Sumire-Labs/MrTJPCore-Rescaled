@@ -26,6 +26,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Read and save empty configuration arrays without throwing or changing their value type.
+
 - Honor hidden-item settings in capability inventory counts and inventory availability checks.
 - Treat overfull inventory slots as having no free insertion space.
 

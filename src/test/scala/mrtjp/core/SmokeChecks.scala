@@ -13,6 +13,37 @@ import io.netty.buffer.Unpooled
 
 object SmokeChecks {
     def run(player:EntityPlayer): Unit = {
+        val configFile = new java.io.File("config/array-smoke.cfg")
+        class ArrayConfig extends mrtjp.core.data.ModConfig("array_smoke") {
+            protected def initValues(): Unit = {}
+            def checkList[T](key:String, defaults:Array[T], expectedType:net.minecraftforge.common.config.Property.Type): Unit = {
+                val actual = BaseCategory("lists").put(key, defaults)
+                assert(actual.toSeq == defaults.toSeq)
+                assert(config.getCategory("lists").get(key).getType == expectedType)
+            }
+            def check(): Unit = {
+                import net.minecraftforge.common.config.Property.Type.*
+                checkList("empty_boolean", Array.emptyBooleanArray, BOOLEAN)
+                checkList("empty_integer", Array.emptyIntArray, INTEGER)
+                checkList("empty_double", Array.emptyDoubleArray, DOUBLE)
+                checkList("empty_string", Array.empty[String], STRING)
+                checkList("boolean", Array(true, false), BOOLEAN)
+                checkList("integer", Array(1, -2), INTEGER)
+                checkList("double", Array(1.25, -2.5), DOUBLE)
+                checkList("string", Array("one", "two"), STRING)
+            }
+        }
+        val arrayConfig = new ArrayConfig
+        arrayConfig.config = new net.minecraftforge.common.config.Configuration(configFile)
+        arrayConfig.check()
+        arrayConfig.config.save()
+        arrayConfig.config = new net.minecraftforge.common.config.Configuration(configFile)
+        arrayConfig.config.load()
+        arrayConfig.check()
+        val savedLists = arrayConfig.config.getCategory("lists")
+        assert(savedLists.get("integer").getIntList.toSeq == Seq(1, -2))
+        assert(savedLists.get("double").getDoubleList.toSeq == Seq(1.25, -2.5))
+
         val inventory = new SimpleInventory(2, "smoke", 64)
         assert(inventory.getStackInSlot(-1).isEmpty)
         assert(inventory.getStackInSlot(2).isEmpty)
