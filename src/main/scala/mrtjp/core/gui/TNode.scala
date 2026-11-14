@@ -155,9 +155,11 @@ trait TNode extends Gui
       * @return A [[Rect]] object that encapsulates all bounding boxes of decendants. This excludes nodes that are [[hidden]].
       */
     def calculateChildrenFrame:Rect =
-        val rect = if children.isEmpty then Rect.zeroRect
-            else children.filterNot(_.hidden).map(_.calculateAccumulatedFrame).reduceLeft(_ `union` _)
-        Rect(convertPointTo(rect.origin, parent), rect.size)
+        val visible = children.filterNot(_.hidden)
+        if visible.isEmpty then Rect(position, Size.zeroSize)
+        else
+            val rect = visible.map(_.calculateAccumulatedFrame).reduceLeft(_ `union` _)
+            Rect(position+rect.origin, rect.size)
 
     /**
       * Calculates a bounding box containing this node and all decendents.

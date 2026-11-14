@@ -10,6 +10,54 @@ import net.minecraft.item.ItemStack
 
 object GuiInputChecks {
     def run(mc:Minecraft): Unit = {
+        class Box extends TNode {
+            override def frame = Rect(position, Size(10, 20))
+        }
+        val root = new NodeGui(100, 80)
+        root.position = Point(50, 60)
+        val parent = new Box
+        parent.position = Point(3, 4)
+        val child = new Box
+        child.position = Point(7, 8)
+        root.addChild(parent)
+        parent.addChild(child)
+        assert(parent.calculateChildrenFrame == Rect(Point(10, 12), Size(10, 20)))
+        assert(root.calculateChildrenFrame == Rect(Point(53, 64), Size(17, 28)))
+        child.hidden = true
+        assert(parent.calculateChildrenFrame == Rect(parent.position, Size.zeroSize))
+        parent.hidden = true
+        assert(root.calculateChildrenFrame == Rect(root.position, Size.zeroSize))
+
+        class Tab extends mrtjp.core.gui.TabNode(20, 30, 80, 100) {
+            override def drawBox(): Unit = {}
+            override def drawIcon(): Unit = {}
+        }
+        val firstTab = new Tab
+        val secondTab = new Tab
+        assert(firstTab.currentH == 30)
+        firstTab.drawBack_Impl(Point.zeroPoint, 0)
+        assert(firstTab.size == Size(20, 30))
+        val tabs = new mrtjp.core.gui.TabControlNode(100, 50)
+        tabs.addChild(firstTab); tabs.addChild(secondTab)
+        tabs.frameUpdate_Impl(Point.zeroPoint, 0)
+        assert(secondTab.position.y == 30)
+        assert(secondTab.mouseClicked_Impl(Point(1, 31), 0, false))
+        assert(secondTab.active)
+        assert(firstTab.mouseClicked_Impl(Point(1, 1), 0, false))
+        assert(firstTab.active && !secondTab.active)
+        assert(firstTab.mouseClicked_Impl(Point(1, 1), 0, false))
+        assert(!firstTab.active)
+        class IconTab extends mrtjp.core.gui.TabNode(20, 30, 80, 100) with mrtjp.core.gui.TIconTab {
+            var iconAt = Point.zeroPoint
+            override def drawTexturedModalRect(x:Int, y:Int, sprite:net.minecraft.client.renderer.texture.TextureAtlasSprite, w:Int, h:Int): Unit = {
+                iconAt = Point(x, y)
+            }
+        }
+        val iconTab = new IconTab
+        iconTab.position = Point(7, 11)
+        iconTab.drawIcon()
+        assert(iconTab.iconAt == Point(10, 14))
+
         val inventory = new SimpleInventory(1, "input", 64)
         inventory.setInventorySlotContents(0, new ItemStack(Items.APPLE, 10))
         val container = new NodeContainer

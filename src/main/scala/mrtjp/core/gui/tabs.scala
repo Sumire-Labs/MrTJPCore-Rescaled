@@ -34,13 +34,13 @@ class TabNode(wMin:Int, hMin:Int, wMax:Int, hMax:Int, val color:Int) extends TNo
     def this(wMin:Int, hMin:Int, wMax:Int, hMax:Int) = this(wMin, hMin, wMax, hMax, EnumColour.LIGHT_GRAY.rgb)
 
     var currentW = wMin.asInstanceOf[Double]
-    var currentH = wMin.asInstanceOf[Double]
+    var currentH = hMin.asInstanceOf[Double]
 
     def getControl = parent.asInstanceOf[TabControlNode]
 
     var size = Size(wMin, hMin)
     override def frame = Rect(position, size)
-    private val startBounds = frame
+    private def startBounds = Rect(position, Size(wMin, hMin))
 
     var active = false
     def isOpen = active && size.width==wMax && size.height==hMax
@@ -116,7 +116,7 @@ trait TIconTab extends TabNode
 
     abstract override def drawIcon(): Unit =
         super.drawIcon()
-        drawTexturedModalRect(position.x+3, position.x+3, icon, 16, 16)
+        drawTexturedModalRect(position.x+3, position.y+3, icon, 16, 16)
 
 
 /**
