@@ -28,6 +28,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Handle collapsed item lists without division by zero and use current widget size and position when drawing.
+
 - Intersect nested scissor regions and restore the previous scissor state after drawing or errors.
 
 - Record only completed structure generation when saving chunks and retain pending work across saves.

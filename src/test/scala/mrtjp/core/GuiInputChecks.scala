@@ -10,6 +10,22 @@ import net.minecraft.item.ItemStack
 
 object GuiInputChecks {
     def run(mc:Minecraft): Unit = {
+        class ItemList extends mrtjp.core.gui.NodeItemList(0, 0, 0, 0) {
+            var background = Rect.zeroRect
+            override def drawGradientRect(x0:Int, y0:Int, x1:Int, y1:Int, top:Int, bottom:Int): Unit = {
+                background = new Rect(x0, y0, x1-x0, y1-y0)
+            }
+        }
+        val list = new ItemList
+        list.position = Point(13, 17)
+        for (size <- Seq(Size(0, 0), Size(1, 1), Size(10, 10), Size(40, 40), Size(0, 0))) {
+            list.size = size
+            list.drawBack_Impl(Point.zeroPoint, 0)
+            list.drawFront_Impl(Point.zeroPoint, 0)
+            assert(list.getSelected == null)
+            if (size.width >= 20 && size.height >= 20) assert(list.background == Rect(Point(13, 17), size))
+        }
+
         class Box extends TNode {
             override def frame = Rect(position, Size(10, 20))
         }

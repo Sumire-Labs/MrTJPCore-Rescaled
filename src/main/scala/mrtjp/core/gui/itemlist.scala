@@ -24,8 +24,8 @@ class NodeItemList(x:Int, y:Int, w:Int, h:Int) extends TNode
     override def frame = Rect(position, size)
 
     private val squareSize = 20
-    private val rows = size.height/squareSize
-    private val columns = size.width/squareSize
+    private def rows = size.height/squareSize
+    private def columns = size.width/squareSize
 
     private var currentPage = 0
     private var pagesNeeded = 0
@@ -83,6 +83,14 @@ class NodeItemList(x:Int, y:Int, w:Int, h:Int) extends TNode
         count
 
     override def drawBack_Impl(mouse:Point, frame:Float): Unit =
+        if rows <= 0 || columns <= 0 then
+            hover = null
+            selection = null
+            currentPage = 0
+            pagesNeeded = 0
+            return
+        val x = position.x
+        val y = position.y
         drawGradientRect(x, y, x+size.width, y+size.height, 0xff808080, 0xff808080)
         pagesNeeded = (getSeachedCount-1)/(rows*columns)
         if pagesNeeded < 0 then pagesNeeded = 0
@@ -92,6 +100,9 @@ class NodeItemList(x:Int, y:Int, w:Int, h:Int) extends TNode
         else drawAllItems(mouse.x, mouse.y)
 
     override def drawFront_Impl(mouse:Point, rframe:Float): Unit =
+        if rows <= 0 || columns <= 0 then return
+        val x = position.x
+        val y = position.y
         if hover != null then GuiDraw.drawMultiLineTip(
             mouse.x+12, mouse.y-12,
             hover.makeStack.getTooltip(mcInst.player,
@@ -107,6 +118,8 @@ class NodeItemList(x:Int, y:Int, w:Int, h:Int) extends TNode
         else false
 
     private def drawLoadingScreen(): Unit =
+        val x = position.x
+        val y = position.y
         val barSizeX = size.width/2
         val time = System.currentTimeMillis/(if waitingForList then 40 else 8)
         val percent = (time%barSizeX).asInstanceOf[Int]
@@ -115,13 +128,15 @@ class NodeItemList(x:Int, y:Int, w:Int, h:Int) extends TNode
         val xStart = x+size.width/2-barSizeX/2
         val yStart = y+frame.height/3
 
-        FontUtils.drawCenteredString("downloading data", (x+size.width)/2, (y+frame.height)/3+squareSize, 0xff165571)
+        FontUtils.drawCenteredString("downloading data", x+size.width/2, y+frame.height/3+squareSize, 0xff165571)
         val xSize = percent
         val ySize = 9
 
         Gui.drawRect(xStart, yStart, xStart+xSize, yStart+ySize, 0xff165571)
 
     private def drawAllItems(mx:Int, my:Int): Unit =
+        val x = position.x
+        val y = position.y
         hover = null
         selection = null
         val xOffset = x-(squareSize-2)
