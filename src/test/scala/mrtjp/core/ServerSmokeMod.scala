@@ -18,8 +18,9 @@ class ServerSmokeMod {
         if (result == null) return
         val server = FMLCommonHandler.instance().getMinecraftServerInstance
         try {
-            SmokeChecks.run(FakePlayerFactory.get(server.getWorld(0), new GameProfile(UUID.randomUUID(), "SmokePlayer")))
-            WorldChecks.run(server.getWorld(0))
+            val player = FakePlayerFactory.get(server.getWorld(0), new GameProfile(UUID.randomUUID(), "SmokePlayer"))
+            SmokeChecks.run(player)
+            WorldChecks.run(server.getWorld(0), player)
             Files.writeString(Path.of(result), "PASS\n")
             println("MRTJPCORE_SMOKE_PASS: inventory bounds/NBT, key state cleanup, C2S description rejection")
         } finally {

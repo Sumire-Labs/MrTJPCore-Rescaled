@@ -48,7 +48,9 @@ class MultiTileBlock(mat:Material) extends Block(mat)
 
     override def getActualState(state:IBlockState, world:IBlockAccess, pos:BlockPos): IBlockState =
         world.getTileEntity(pos) match
-            case t:MTBlockTile => state.withProperty(TILE_INDEX, tiles.indexOf(t.getClass).asInstanceOf[Integer])
+            case t:MTBlockTile =>
+                val index = tiles.indexOf(t.getClass)
+                if index >= 0 then state.withProperty(TILE_INDEX, Integer.valueOf(index)) else state
             case _ => state
 
     override def getMetaFromState(state:IBlockState): Int = state.getValue(TILE_INDEX.asInstanceOf[IProperty[Nothing]])
@@ -105,6 +107,7 @@ class MultiTileBlock(mat:Material) extends Block(mat)
     override def canPlaceTorchOnTop(state: IBlockState, world: IBlockAccess, pos: BlockPos): Boolean =
         world.getTileEntity(pos) match
             case t: MTBlockTile => t.canPlaceTorchOnTop
+            case _ => false
 
     override def getExplosionResistance(world:World, pos:BlockPos, exploder:Entity, explosion:Explosion): Float =
         world.getTileEntity(pos) match
@@ -171,6 +174,7 @@ class MultiTileBlock(mat:Material) extends Block(mat)
     override def onEntityWalk(world:World, pos:BlockPos, entity:Entity) =
         world.getTileEntity(pos) match
             case t:MTBlockTile => t.onEntityWalk(entity)
+            case _ => super.onEntityWalk(world, pos, entity)
 
     override def neighborChanged(state:IBlockState, world:World, pos:BlockPos, blockIn:Block, fromPos:BlockPos): Unit =
         world.getTileEntity(pos) match

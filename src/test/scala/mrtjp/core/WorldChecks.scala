@@ -9,7 +9,35 @@ import java.util.Random
 import scala.jdk.CollectionConverters.*
 
 object WorldChecks {
-    def run(world:World): Unit = {
+    def run(world:World, entity:net.minecraft.entity.Entity): Unit = {
+        val multi = new mrtjp.core.block.MultiTileBlock(net.minecraft.block.material.Material.ROCK)
+        for (meta <- 0 until 16) assert(multi.getMetaFromState(multi.getStateFromMeta(meta)) == meta)
+        val tilePos = new BlockPos(30, 90, 30)
+        val oldBlock = world.getBlockState(tilePos)
+        val oldTile = world.getTileEntity(tilePos)
+        try {
+            world.setBlockState(tilePos, Blocks.AIR.getDefaultState, 2)
+            assert(!multi.canPlaceTorchOnTop(multi.getDefaultState, world, tilePos))
+            multi.onEntityWalk(world, tilePos, entity)
+            class WalkingTile extends mrtjp.core.block.MTBlockTile {
+                var walks = 0
+                def getBlock = multi
+                override def onEntityWalk(entity:net.minecraft.entity.Entity): Unit = { walks += 1 }
+            }
+            val tile = new WalkingTile
+            world.setBlockState(tilePos, Blocks.CHEST.getDefaultState, 2)
+            world.setTileEntity(tilePos, tile)
+            assert(world.getTileEntity(tilePos) eq tile)
+            val state = multi.getStateFromMeta(3)
+            assert(multi.getActualState(state, world, tilePos) == state)
+            assert(multi.canPlaceTorchOnTop(state, world, tilePos))
+            multi.onEntityWalk(world, tilePos, entity)
+            assert(tile.walks == 1)
+        } finally {
+            world.setBlockState(tilePos, oldBlock, 2)
+            if (oldTile != null) world.setTileEntity(tilePos, oldTile)
+        }
+
         val pos = new BlockPos(12, 90, 12)
         val logic = new TGenerationLogic {
             def generate_impl(w:World, x:Int, z:Int, random:Random) = false
