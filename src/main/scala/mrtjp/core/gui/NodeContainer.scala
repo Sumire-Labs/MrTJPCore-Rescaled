@@ -174,7 +174,7 @@ class NodeContainer extends Container
             while stack.getCount > 0 && (!reverse && k < end || reverse && k >= start) do
                 slot = slots(k)
                 inslot = slot.getStack
-                if !slot.phantomSlot && !inslot.isEmpty && inslot.getItem == stack.getItem &&
+                if !slot.phantomSlot && slot.isItemValid(stack) && !inslot.isEmpty && inslot.getItem == stack.getItem &&
                         (!stack.getHasSubtypes || stack.getItemDamage == inslot.getItemDamage) &&
                         ItemStack.areItemStackTagsEqual(stack, inslot) then
                     val space = math.min(slot.getSlotStackLimit, stack.getMaxStackSize)-inslot.getCount

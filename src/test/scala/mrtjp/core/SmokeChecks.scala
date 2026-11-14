@@ -130,6 +130,20 @@ object SmokeChecks {
         container.putStackInSlot(0, new ItemStack(Items.APPLE, 2))
         assert(limited.getStackInSlot(0).getCount == 2)
 
+        val filteredInventory = new SimpleInventory(2, "filtered", 64)
+        filteredInventory.setInventorySlotContents(0, new ItemStack(Items.APPLE, 5))
+        val filteredContainer = new mrtjp.core.gui.NodeContainer
+        val blockedSlot = new mrtjp.core.gui.Slot3(filteredInventory, 0, 0, 0)
+        blockedSlot.canPlaceDelegate = _ => false
+        filteredContainer.addSlotToContainer(blockedSlot)
+        val rejected = new ItemStack(Items.APPLE, 3)
+        assert(!filteredContainer.tryMergeItemStack(rejected, 0, 1, false))
+        assert(rejected.getCount == 3 && filteredInventory.getStackInSlot(0).getCount == 5)
+        filteredContainer.addSlotToContainer(new mrtjp.core.gui.Slot3(filteredInventory, 1, 18, 0))
+        assert(filteredContainer.tryMergeItemStack(rejected, 0, 2, false))
+        assert(rejected.isEmpty)
+        assert(filteredInventory.getStackInSlot(0).getCount == 5 && filteredInventory.getStackInSlot(1).getCount == 3)
+
         val tracker = new TServerKeyTracker {}
         tracker.register()
         KeyTracking.updatePlayerKey(255, player, true) // Unknown IDs are ignored.
