@@ -28,6 +28,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Check project bytecode versions without rejecting libraries relocated into the project namespace.
+
 - Resolve embedded dependencies as runtime jars and apply token replacement to all compiled classes.
 - Check class-file string constants for unresolved tokens without interpreting binary constants as text.
 

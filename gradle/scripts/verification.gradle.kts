@@ -18,6 +18,7 @@ val accessTransformers = if (atEnabled) configuredTransformers.ifEmpty { listOf(
 val nativeRefmap = providers.gradleProperty("cg.userdev.refmap").get()
 val modVersion = project.version.toString()
 val runtimeJar = tasks.named<RenameJar>("reobfJar").flatMap { it.output }
+val projectClassDirs = extensions.getByType<SourceSetContainer>().getByName("main").output.classesDirs
 val containedNames = configurations.named("contain").flatMap { it.elements }
     .map { files -> files.map { it.asFile.name }.sorted() }
 
@@ -25,6 +26,7 @@ val verifyModJar = tasks.register("verifyModJar") {
     group = "verification"
     description = "Checks Mod metadata and optional features in the SRG distribution jar."
     inputs.file(runtimeJar)
+    inputs.files(projectClassDirs).withPropertyName("projectClasses")
     inputs.property("modId", mod_id)
     inputs.property("modPackage", root_package)
     inputs.property("modVersion", modVersion)
@@ -43,7 +45,12 @@ val verifyModJar = tasks.register("verifyModJar") {
         val accessTransformers = (inputs.properties.getValue("accessTransformers") as List<*>).map { it as String }
         val nativeRefmap = inputs.properties.getValue("nativeRefmap") as String
         val expectedContained = (inputs.properties.getValue("containedDependencies") as List<*>).map { it as String }
-        JarFile(inputs.files.singleFile).use { jar ->
+        val projectClasses = inputs.files.files.filter { it.isDirectory }.flatMap { root ->
+            root.walkTopDown().filter { it.isFile && it.extension == "class" }
+                .map { it.relativeTo(root).invariantSeparatorsPath }.toList()
+        }.toSet()
+        val archive = inputs.files.files.single { it.isFile && it.extension == "jar" }
+        JarFile(archive).use { jar ->
             val entries = jar.entries().asSequence().toList()
             if (jar.getJarEntry("META-INF/COPYING.LESSER") == null) {
                 throw GradleException("Missing license notice: META-INF/COPYING.LESSER")
@@ -59,7 +66,7 @@ val verifyModJar = tasks.register("verifyModJar") {
             }
             check(entries.any { it.name.endsWith(".tasty") }) { "Missing Scala 3 metadata" }
             check(entries.none { it.name.startsWith("mrtjp/core/") && (it.name.contains("SmokeChecks") || it.name.contains("ServerSmokeMod") || it.name.contains("EnumTest")) }) { "Test classes leaked into distribution" }
-            entries.filter { it.name.endsWith(".class") && it.name.startsWith(root_package.replace('.', '/') + "/") }.forEach { entry ->
+            entries.filter { it.name in projectClasses }.forEach { entry ->
                 val major = jar.getInputStream(entry).use { input ->
                     java.io.DataInputStream(input).run { readInt(); readUnsignedShort(); readUnsignedShort() }
                 }
