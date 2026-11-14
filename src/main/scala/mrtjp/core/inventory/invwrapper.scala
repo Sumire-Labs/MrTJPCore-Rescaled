@@ -31,10 +31,9 @@ object InvWrapper
 
     @deprecated
     def wrap(inv:IInventory): InvWrapper =
-        for w <- wrappers do
-            if w.matches(inv) then
-                w.create(inv)
-        new VanillaWrapper(inv, false)
+        wrappers.find(_.matches(inv)) match
+            case Some(wrapper) => wrapper.create(inv)
+            case None => new VanillaWrapper(inv, false)
 
     //Used for wrapping inventory tiles
     def wrap(world:World, pos:BlockPos, side:EnumFacing):InvWrapper =
@@ -257,6 +256,7 @@ class CapWrapper(cap:IItemHandler) extends InvWrapper
 
     override def injectItem(item:ItemKey, toAdd:Int):Int =
         boundary:
+            if toAdd <= 0 then return 0
             var itemsLeft = toAdd
             for s <- 0 until cap.getSlots do
                 var amountToAdd = itemsLeft
@@ -275,6 +275,7 @@ class CapWrapper(cap:IItemHandler) extends InvWrapper
 
     override def extractItem(item:ItemKey, toExtract:Int):Int =
         boundary:
+            if toExtract <= 0 then return 0
             var itemsLeft = toExtract
             var didMatch = false
 
@@ -288,7 +289,7 @@ class CapWrapper(cap:IItemHandler) extends InvWrapper
                     else if hidePerType && !didMatch then
                         amountAvailable -= 1
 
-                    val amountToExtract = math.min(itemsLeft, amountAvailable)
+                    val amountToExtract = math.min(itemsLeft, math.max(0, amountAvailable))
                     val stack = cap.extractItem(s, amountToExtract, false)
 
                     itemsLeft -= stack.getCount
@@ -385,6 +386,7 @@ class VanillaWrapper(inv:IInventory, internalMode:Boolean) extends InvWrapper
 
     override def injectItem(item:ItemKey, toAdd:Int):Int =
         boundary:
+            if toAdd <= 0 then return 0
             var itemsLeft = toAdd
             val slotStackLimit = math.min(inv.getInventoryStackLimit, item.getMaxStackSize)
 
@@ -392,12 +394,12 @@ class VanillaWrapper(inv:IInventory, internalMode:Boolean) extends InvWrapper
                 val inSlot = inv.getStackInSlot(slot)
 
                 if !inSlot.isEmpty && InvWrapper.areItemsStackable(item.testStack, inSlot) then
-                    val fit = math.min(slotStackLimit-inSlot.getCount, itemsLeft)
+                    val fit = math.min(math.max(0, slotStackLimit-inSlot.getCount), itemsLeft)
                     inSlot.grow(fit)
                     itemsLeft -= fit
                     inv.setInventorySlotContents(slot, inSlot)
                 else if pass == 1 && inSlot.isEmpty then
-                    val toInsert = item.makeStack(math.min(inv.getInventoryStackLimit, itemsLeft))
+                    val toInsert = item.makeStack(math.min(slotStackLimit, itemsLeft))
                     itemsLeft -= toInsert.getCount
                     inv.setInventorySlotContents(slot, toInsert)
 

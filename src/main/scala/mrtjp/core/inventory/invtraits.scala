@@ -31,13 +31,16 @@ trait TInventory extends IInventory
     override def openInventory(player:EntityPlayer): Unit ={}
     override def closeInventory(player:EntityPlayer): Unit ={}
 
-    override def getStackInSlot(slot:Int) = storage(slot)
+    override def getStackInSlot(slot:Int) =
+        if storage.isDefinedAt(slot) then storage(slot) else ItemStack.EMPTY
 
     override def setInventorySlotContents(slot:Int, item:ItemStack): Unit =
-        storage(slot) = item
-        markDirty()
+        if storage.isDefinedAt(slot) then
+            storage(slot) = item
+            markDirty()
 
     override def removeStackFromSlot(slot:Int) =
+        if !storage.isDefinedAt(slot) then return ItemStack.EMPTY
         val stack = storage(slot)
         if !stack.isEmpty then
             storage(slot) = ItemStack.EMPTY
@@ -45,6 +48,8 @@ trait TInventory extends IInventory
         stack
 
     override def decrStackSize(slot:Int, count:Int):ItemStack =
+        if count <= 0 then return ItemStack.EMPTY
+        if !storage.isDefinedAt(slot) then return ItemStack.EMPTY
         val stack = storage(slot)
         if stack.isEmpty then return ItemStack.EMPTY
 

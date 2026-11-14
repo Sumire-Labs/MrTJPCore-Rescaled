@@ -217,7 +217,7 @@ class NodeContainer extends Container
 
     //Hack to allow empty containers for use with guis without inventories
     override def putStackInSlot(slot:Int, stack:ItemStack): Unit =
-        if inventorySlots.isEmpty || inventorySlots.size < slot then return
+        if slot < 0 || slot >= inventorySlots.size then return
         else super.putStackInSlot(slot, stack)
 
 class Slot3(inv:IInventory, i:Int, x:Int, y:Int) extends Slot(inv, i, x, y) with TSlot3

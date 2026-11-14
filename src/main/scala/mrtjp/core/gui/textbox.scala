@@ -30,7 +30,6 @@ class SimpleTextboxNode(x:Int, y:Int, w:Int, h:Int, tq:String) extends TNode
     def this() = this(0, 0, 0, 0, "")
 
     position = Point(x, y)
-    text = tq
 
     /**
       * If enabled, the text box will be focus-able and will respond to events. When not enabled, existing text,
@@ -44,7 +43,7 @@ class SimpleTextboxNode(x:Int, y:Int, w:Int, h:Int, tq:String) extends TNode
     var focused = false
 
     /** The current text of the text box. */
-    var text = ""
+    var text = tq
 
     /** Phantom text that is shown when the text box is empty. */
     var phantom = ""

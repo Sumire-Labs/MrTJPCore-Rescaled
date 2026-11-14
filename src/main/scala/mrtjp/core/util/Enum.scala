@@ -73,11 +73,11 @@ trait Enum
             new ValSet(set.rangeImpl(from.map(_.ordinal), until.map(_.ordinal)))
 
         override def contains(elem:EnumVal) = set contains elem.ordinal
-        override def excl(elem:EnumVal) = new ValSet(set + elem.ordinal)
-        override def incl(elem:EnumVal) = new ValSet(set - elem.ordinal)
+        override def excl(elem:EnumVal) = new ValSet(set - elem.ordinal)
+        override def incl(elem:EnumVal) = new ValSet(set + elem.ordinal)
         override def iterator = set.iterator map (id => thisenum(id))
         override def iteratorFrom(start: EnumVal) =
-            throw new NotImplementedError("Please report this crash")
+            set.iteratorFrom(start.ordinal).map(id => thisenum(id))
 
     object ValSet
     :
