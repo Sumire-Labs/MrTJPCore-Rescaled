@@ -42,6 +42,18 @@ object ClientSmokeChecks {
             val previousPlayer = mc.player
             try {
                 mc.player = player
+                val resized = new mrtjp.core.gui.NodeGui(100, 80)
+                resized.size = mrtjp.core.vec.Size(200, 120)
+                resized.setWorldAndResolution(mc, 800, 600)
+                assert(resized.position == mrtjp.core.vec.Point(300, 240))
+                resized.size = mrtjp.core.vec.Size(240, 160)
+                resized.setWorldAndResolution(mc, 800, 600)
+                assert(resized.position == mrtjp.core.vec.Point(280, 220))
+                val legacy = new mrtjp.core.gui.NodeGui(100, 80)
+                legacy.setWorldAndResolution(mc, 800, 600)
+                assert(legacy.size == mrtjp.core.vec.Size(100, 80))
+                assert(legacy.position == mrtjp.core.vec.Point(350, 260))
+
                 clientTracker.tick(new ClientTickEvent(Phase.END))
                 mrtjp.core.data.KeyTracking.updatePlayerKey(serverTracker.id, player, true)
                 assert(serverTracker.isKeyDown(player))

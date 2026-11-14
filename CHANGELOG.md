@@ -26,6 +26,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Center NodeGui windows using their configured size on first display and after resizing.
+
 - Match biome filters against Scala sets and scan tree canopies from the correct world height.
 - Apply decorator placement rules when checkStay is enabled and honor the underTree filter.
 

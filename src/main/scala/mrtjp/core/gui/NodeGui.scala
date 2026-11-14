@@ -89,12 +89,12 @@ class NodeGui(c:Container, w:Int, h:Int) extends GuiContainer(c) with TNode
     override def frame = new Rect(position, size)
 
     final override def initGui(): Unit =
-        super.initGui()
-        position = Point(guiLeft, guiTop)
         if size == Size.zeroSize then size = Size(xSize, ySize) //TODO Legacy (size should be set directly)
         else
             xSize = size.width
             ySize = size.height
+        super.initGui()
+        position = Point(guiLeft, guiTop)
 
     final override def updateScreen(): Unit =
         super.updateScreen()
