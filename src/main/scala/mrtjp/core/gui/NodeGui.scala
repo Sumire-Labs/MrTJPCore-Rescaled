@@ -111,17 +111,14 @@ class NodeGui(c:Container, w:Int, h:Int) extends GuiContainer(c) with TNode
         if init then onAddedToParent_Impl()
 
     final override def mouseClicked(x:Int, y:Int, button:Int): Unit =
-        super.mouseClicked(x, y, button)
-        mouseClicked(new Point(x, y), button, false)
+        if !mouseClicked(new Point(x, y), button, false) then super.mouseClicked(x, y, button)
 
 
     final override def mouseReleased(x:Int, y:Int, button:Int): Unit =
-        super.mouseReleased(x, y, button)
-        if button != -1 then mouseReleased(new Point(x, y), button, false)
+        if button == -1 || !mouseReleased(new Point(x, y), button, false) then super.mouseReleased(x, y, button)
 
     final override def mouseClickMove(x:Int, y:Int, button:Int, time:Long): Unit =
-        super.mouseClickMove(x, y, button, time)
-        mouseDragged(new Point(x, y), button, time, false)
+        if !mouseDragged(new Point(x, y), button, time, false) then super.mouseClickMove(x, y, button, time)
 
     final override def handleMouseInput(): Unit =
         super.handleMouseInput()

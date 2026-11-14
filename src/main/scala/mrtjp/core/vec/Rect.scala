@@ -32,7 +32,7 @@ case class Rect(origin:Point, size:Size)
 
     def contains(p:Point):Boolean = p.x >= x && p.y >= y && p.x <= maxX && p.y <= maxY
     def contains(rect:Rect):Boolean = contains(rect.origin) && contains(rect.maxPoint)
-    def intersects(r:Rect) = contains(r.origin) || contains(r.maxPoint) || r.contains(origin) || r.contains(maxPoint)
+    def intersects(r:Rect) = x <= r.maxX && maxX >= r.x && y <= r.maxY && maxY >= r.y
 
     def enclose(p:Point) = new Rect(Point(math.min(x, p.x), math.min(y, p.y)), Point(math.max(maxX, p.x), math.max(maxY, p.y)))
     def union(r:Rect) = new Rect(Point(math.min(x, r.x), math.min(y, r.y)), Point(math.max(maxX, r.maxX), math.max(maxY, r.maxY)))

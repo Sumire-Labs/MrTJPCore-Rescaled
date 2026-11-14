@@ -26,6 +26,9 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Stop consumed GUI mouse events from reaching the backing container.
+- Detect crossing rectangle intersections even when no corners are contained.
+
 - Respect slot insertion rules when merging into existing stacks.
 
 - Copy source NBT when creating or copying item keys so later tag changes do not alter existing keys.
