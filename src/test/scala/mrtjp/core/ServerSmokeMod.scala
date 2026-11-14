@@ -21,6 +21,7 @@ class ServerSmokeMod {
             val player = FakePlayerFactory.get(server.getWorld(0), new GameProfile(UUID.randomUUID(), "SmokePlayer"))
             SmokeChecks.run(player)
             WorldChecks.run(server.getWorld(0), player)
+            RetrogenChecks.run(server.getWorld(0))
             Files.writeString(Path.of(result), "PASS\n")
             println("MRTJPCORE_SMOKE_PASS: inventory bounds/NBT, key state cleanup, C2S description rejection")
         } finally {

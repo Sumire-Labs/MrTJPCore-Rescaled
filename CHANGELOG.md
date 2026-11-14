@@ -28,6 +28,9 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Record only completed structure generation when saving chunks and retain pending work across saves.
+- Deduplicate retrogen requests, respect configuration changes and discard unloaded-world queues without loading distant chunks.
+
 - Handle missing or unregistered multi-tile entities in block state and event callbacks.
 
 - Place cuboids in the correct rows when building rectangular grids.

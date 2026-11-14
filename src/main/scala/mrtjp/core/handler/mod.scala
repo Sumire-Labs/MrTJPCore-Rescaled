@@ -36,8 +36,8 @@ object MrTJPCoreMod
 
 object MrTJPConfig extends ModConfig("mrtjpcore")
 :
-    var retro_gen = false
-    var retro_gen_id = "mrtjp_gen"
+    @volatile var retro_gen = false
+    @volatile var retro_gen_id = "mrtjp_gen"
 
     var check_versions = true
     var check_unstable = false
