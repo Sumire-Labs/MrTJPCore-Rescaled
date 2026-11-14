@@ -22,7 +22,7 @@ object VecLib
         val data = new Array[IndexedCuboid6](xSize * zSize)
         for i <- 0 until data.length do
             val x = i%xSize
-            val z = i/zSize
+            val z = i/xSize
             val dx = (max.x-min.x)/xSize
             val dz = (max.z-min.z)/zSize
             val min1 = new Vector3(min.x+dx*x, min.y, min.z+dz*z)

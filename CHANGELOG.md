@@ -28,6 +28,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Place cuboids in the correct rows when building rectangular grids.
+
 - Handle empty or fully hidden GUI children and keep tab sizes, hit regions and icon positions aligned.
 
 - Order delayed work by its completion time and prevent extreme delays from overflowing.
