@@ -18,6 +18,7 @@ class ServerSmokeMod {
         if (result == null) return
         val server = FMLCommonHandler.instance().getMinecraftServerInstance
         try {
+            RuntimeChecks.verify()
             val player = FakePlayerFactory.get(server.getWorld(0), new GameProfile(UUID.randomUUID(), "SmokePlayer"))
             SmokeChecks.run(player)
             WorldChecks.run(server.getWorld(0), player)

@@ -14,6 +14,7 @@ object ClientSmokeChecks {
         if (event.phase != Phase.END || !mc.currentScreen.isInstanceOf[GuiMainMenu]) return
         MinecraftForge.EVENT_BUS.unregister(this)
         try {
+            RuntimeChecks.verify()
             val box = new SimpleTextboxNode(0, 0, 200, 20, "initial")
             assert(box.text == "initial")
             box.setFocused(true)

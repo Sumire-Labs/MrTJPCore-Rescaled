@@ -54,7 +54,7 @@ base.archivesName.set("MrTJPCore-Rescaled")
 scala { scalaVersion.set(propertyString("scala_version")) }
 tasks.withType<ScalaCompile>().configureEach {
     options.encoding = "UTF-8"
-    scalaCompileOptions.additionalParameters = listOf("-release:25", "-Ximport-suggestion-timeout:0")
+    scalaCompileOptions.additionalParameters = listOf("-source:3.10", "-release:25", "-Ximport-suggestion-timeout:0")
 }
 require(modId.matches(Regex("[a-z][a-z0-9_-]*"))) {
     "mod_id must start with a lowercase letter and contain only lowercase letters, numbers, underscores or hyphens."
@@ -374,11 +374,13 @@ tasks.register("printReleaseInfo") {
 val versionSources = layout.buildDirectory.dir("generated/sources/version/scala")
 val generateVersion = tasks.register("generateVersion") {
     inputs.property("version", modVersion)
+    inputs.property("scalaVersion", propertyString("scala_version"))
     outputs.dir(versionSources)
     doLast {
         val target = outputs.files.singleFile.resolve("mrtjp/core/Reference.scala")
         target.parentFile.mkdirs()
-        target.writeText("package mrtjp.core\nobject Reference:\n    final val VERSION = " + JsonOutput.toJson(inputs.properties.getValue("version")) + "\n")
+        target.writeText("package mrtjp.core\nobject Reference:\n    final val VERSION = " + JsonOutput.toJson(inputs.properties.getValue("version")) +
+            "\n    final val SCALA_VERSION = " + JsonOutput.toJson(inputs.properties.getValue("scalaVersion")) + "\n")
     }
 }
 sourceSets.main { scala.srcDir(generateVersion) }

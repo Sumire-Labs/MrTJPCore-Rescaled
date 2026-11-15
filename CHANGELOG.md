@@ -17,12 +17,14 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Compile with Scala 3.10.0 language mode and require the matching Scalar 3.10.0 runtime.
+
 - Sync build support with CleanroomDevEnv at `6b24e5c`.
 
 - Build with CleanroomDevEnv, CleanroomGradle 0.23.0, Gradle 9.9.0 and Java 25.
-- Port the library to Scala 3.9.0 using kappa-maintainer's 1.12.x sources.
+- Port the library to Scala 3.10.0 using kappa-maintainer's 1.12.x sources.
 - Use Cleanroom userdev mappings and standard source directories.
-- Require Cleanroom 0.7.14-alpha, CodeChickenLib CRE 3.3.10 and Scalar 3.9.0 or newer.
+- Require Cleanroom 0.7.14-alpha, CodeChickenLib CRE 3.3.10 and Scalar 3.10.0 or newer.
 - Generate version constants before compilation and derive release versions from Git tags.
 - Publish an SRG runtime jar, an MCP-named `dev` jar and a sources jar under `mrtjp.core:MrTJPCore-Rescaled`.
 - Mark alpha, beta and release-candidate tags as GitHub prereleases.

@@ -8,7 +8,7 @@ The mod ID remains `mrtjpcore` and packages remain `mrtjp.core`.
 - Java 25
 - Cleanroom 0.7.14-alpha or newer
 - [CodeChickenLib CRE](https://github.com/Refitbench/CodeChickenLib) 3.3.10 or newer
-- [Scalar](https://www.curseforge.com/minecraft/mc-mods/scalar) 3.9.0 (Scala 3 language adapter)
+- [Scalar](https://www.curseforge.com/minecraft/mc-mods/scalar/files/9145663) 3.10.0 (Scala 3 language adapter)
 
 Install the distribution jar and these runtime dependencies in your Cleanroom instance.
 Scala 2 builds of ProjectRed and other consumers must be ported/recompiled for Scala 3;
@@ -20,6 +20,8 @@ The build is based on [CleanroomDevEnv](https://github.com/Sumire-Labs/Cleanroom
 at `6b24e5c`, using CleanroomGradle 0.23.0 and Gradle 9.9.0.
 Cleanroom userdev supplies the mappings, replacing ForgeGradle 2.3 and snapshot_20171003.
 Dependencies and the Scala version are pinned in `gradle.properties`.
+The compiler, standard library and Scalar runtime use Scala 3.10.0. Scala consumers
+of this build must use a Scala 3.10 toolchain or a newer compatible compiler.
 Use JDK 25 as JAVA_HOME when launching Gradle.
 
 ```sh
