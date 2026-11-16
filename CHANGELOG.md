@@ -7,6 +7,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-beta] - 2026-11-17
+
 ### Added
 
 - An optional JEI-compatible GUI handler for visible node areas outside the main window, including clipped and hidden-node handling ([ProjectRed #1739](https://github.com/MrTJP/ProjectRed/issues/1739)).
@@ -104,4 +106,5 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject client tile-description packets and limit tile actions to loaded blocks within eight blocks of the sender ([MrTJPCore #37](https://github.com/MrTJP/MrTJPCore/issues/37)).
 - Dispatch client tile actions through the opt-in `MTBlockTile.readFromClient` hook. Consumers must move client action handlers from `read` to this hook and validate permissions and payloads there.
 
-[Unreleased]: https://github.com/Sumire-Labs/MrTJPCore-Rescaled/compare/6f8a17c5d20de0db58f408edaa140a301035cf9e...cleanroom
+[Unreleased]: https://github.com/Sumire-Labs/MrTJPCore-Rescaled/compare/3.0.0-beta...cleanroom
+[3.0.0-beta]: https://github.com/Sumire-Labs/MrTJPCore-Rescaled/compare/6f8a17c5d20de0db58f408edaa140a301035cf9e...3.0.0-beta
