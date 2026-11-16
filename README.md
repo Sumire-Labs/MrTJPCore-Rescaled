@@ -3,6 +3,12 @@
 A shared library used by [ProjectRed Rescaled](https://github.com/Sumire-Labs/ProjectRed-Rescaled) and other mods.
 This fork of [MrTJPCore](https://github.com/MrTJP/MrTJPCore) includes new features, bug fixes, and a migration to [Cleanroom](https://github.com/CleanroomMC/Cleanroom), Java 25, and Scala 3.
 
+## Requirements
+
+- [Cleanroom](https://github.com/CleanroomMC/Cleanroom) 0.7.14-alpha or newer
+- [Scalar](https://github.com/CleanroomMC/Scalar) 3.10.0 or newer
+- [CodeChicken Lib CRE](https://github.com/Refitbench/CodeChickenLib) 3.3.10 or newer
+
 ## Changes
 
 - Migrate to Cleanroom, Java 25, and Scala 3.
@@ -35,8 +41,6 @@ Releases use these coordinates on [Sumire Labs Maven](https://artifact.sumirelab
 ```text
 mrtjp.core:MrTJPCore-Rescaled:<version>
 ```
-
-See [Publishing](docs/publishing.md) for GitHub Actions configuration and release steps.
 
 ## Credits
 
