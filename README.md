@@ -30,11 +30,13 @@ This fork of [MrTJPCore](https://github.com/MrTJP/MrTJPCore) includes new featur
 
 ## For Developers
 
-Available from [Sumire Labs Maven](https://artifact.sumirelabs.com/maven/releases):
+Releases use these coordinates on [Sumire Labs Maven](https://artifact.sumirelabs.com/maven/releases):
 
 ```text
-xxx.xxx:<version>
+mrtjp.core:MrTJPCore-Rescaled:<version>
 ```
+
+See [Publishing](docs/publishing.md) for GitHub Actions configuration and release steps.
 
 ## Credits
 
