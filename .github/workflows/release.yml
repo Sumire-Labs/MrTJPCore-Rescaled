@@ -38,6 +38,7 @@ jobs:
             exit 1
           fi
           echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "CHANGELOG_FILE=$RUNNER_TEMP/mrtjpcore-release-notes.md" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
@@ -133,10 +134,10 @@ jobs:
                 sub(/\n+$/, "", notes)
                 print notes
               }
-            ' CHANGELOG.md > RELEASE_NOTES.md
+            ' CHANGELOG.md > "$CHANGELOG_FILE"
           else
             gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
-              -f tag_name="$TAG" --jq .body > RELEASE_NOTES.md
+              -f tag_name="$TAG" --jq .body > "$CHANGELOG_FILE"
           fi
       - name: Build
         run: ./gradlew clean build --console=plain
@@ -157,7 +158,6 @@ jobs:
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          CHANGELOG_FILE: RELEASE_NOTES.md
         run: ./gradlew publishMods --console=plain
       - name: Create GitHub Release
         env:
@@ -170,7 +170,7 @@ jobs:
           if [[ "$RELEASE_TYPE" != stable ]]; then
             args+=(--prerelease --latest=false)
           fi
-          gh release create "$TAG" --title "$VERSION" --notes-file RELEASE_NOTES.md \
+          gh release create "$TAG" --title "$VERSION" --notes-file "$CHANGELOG_FILE" \
             "${args[@]}" \
             "build/libs/MrTJPCore-Rescaled-$VERSION.jar" \
             "build/libs/MrTJPCore-Rescaled-$VERSION-sources.jar"

@@ -34,6 +34,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Write release notes outside the checkout so generated notes do not change the tagged build version.
+
 - Run block update hooks only on loaded chunks, avoiding forced loads and missing-chunk accesses (related to [MrTJPCore #23](https://github.com/MrTJP/MrTJPCore/issues/23) and [#38](https://github.com/MrTJP/MrTJPCore/issues/38)).
 
 - Handle collapsed item lists without division by zero and use current widget size and position when drawing.
