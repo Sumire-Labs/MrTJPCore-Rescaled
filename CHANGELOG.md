@@ -17,6 +17,8 @@ and release versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Configure the Modrinth and CurseForge project IDs for automated releases.
+
 - Read Modrinth and CurseForge project IDs from GitHub Actions variables or secrets.
 
 - Compile with Scala 3.10.0 language mode and require the matching Scalar 3.10.0 runtime.

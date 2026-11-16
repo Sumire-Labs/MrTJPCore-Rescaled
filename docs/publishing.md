@@ -14,8 +14,11 @@ Add these values under **Settings > Secrets and variables > Actions**:
 | `CURSEFORGE_TOKEN` | Secret | Upload releases to CurseForge. |
 | `MAVEN_USERNAME` | Secret | Authenticate to Sumire Labs Maven. |
 | `MAVEN_PASSWORD` | Secret | Authenticate to Sumire Labs Maven. |
-| `MODRINTH_PROJECT_ID` | Variable or secret | Select the Modrinth project. |
-| `CURSEFORGE_PROJECT_ID` | Variable or secret | Select the CurseForge project using its numeric ID. |
+| `MODRINTH_PROJECT_ID` | Optional variable or secret | Override the Modrinth project ID. |
+| `CURSEFORGE_PROJECT_ID` | Optional variable or secret | Override the numeric CurseForge project ID. |
+
+The project IDs are already set in `gradle.properties`: `qteD8tkC` for Modrinth
+and `1804843` for CurseForge. Only the four authentication secrets are required.
 
 If an ID is set as both a variable and a secret, the variable takes precedence.
 Nonblank IDs from GitHub settings override `modrinth_project_id` and
